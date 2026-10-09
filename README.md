@@ -109,11 +109,11 @@ The deploy script refuses unknown chains and checks the registry's code hash bef
 Run from the `contracts` folder. Set `OWNER` (admin) and `RESETTER` (the agent's address), plus optionally `ANT_PRICE` in wei. Use your own key management; the example uses an interactive key prompt.
 
 ```bash
-forge script script/Deploy.s.sol --rpc-url monad_testnet --broadcast --interactives 1
+forge script script/Deploy.s.sol --rpc-url monad_testnet --broadcast --interactives 1 --sender <your address>
 ```
 
 ```bash
-forge script script/Deploy.s.sol --rpc-url monad --broadcast --interactives 1
+forge script script/Deploy.s.sol --rpc-url monad --broadcast --interactives 1 --sender <your address>
 ```
 
 The script prints the addresses. If `OWNER` differs from the deployer, the owner must call `acceptOwnership()`.

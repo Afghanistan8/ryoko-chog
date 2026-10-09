@@ -49,7 +49,9 @@ contract Deploy is Script {
         uint64 legDuration = uint64(vm.envOr("LEG_DURATION", mainnet ? uint256(9 days) : uint256(540)));
 
         vm.startBroadcast();
-        address deployer = msg.sender;
+        // The broadcasting wallet, however the key was supplied (--private-key, --interactives, --account).
+        // Reading msg.sender here is wrong: with --interactives it is Foundry's default sender.
+        (, address deployer,) = vm.readCallers();
 
         if (mainnet) {
             chog = MAINNET_CHOG_GENESIS;

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { useAccount } from 'wagmi';
 import { compareForLeaderboard, displaySwamp, formatTokens, glowLevel, Status, SWAMPS } from '@ryoko/shared';
 import { useAllJourneys, useJourneyConfig, usePrefersReducedMotion } from '../hooks';
@@ -151,10 +151,10 @@ export function Home() {
         </h2>
         <div className="map">
           {SWAMPS.map((s) => (
-            <div key={s.number} className="tile" style={{ borderColor: `rgba(${s.glow},.45)` }}>
+            <div key={s.number} className="tile" style={{ '--g': s.glow } as CSSProperties}>
               <span className="tile-n">
                 Swamp {s.number}
-                <b style={{ background: `rgb(${s.glow})` }} aria-hidden="true" />
+                <b aria-hidden="true" />
               </span>
               <span className="tile-name">{s.name}</span>
               <span className="tile-mood">{s.mood}</span>

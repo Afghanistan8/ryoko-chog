@@ -20,5 +20,9 @@
     "build:web": "npm run build -w web",
     "agent": "npm run start -w agent",
     "agent:mainnet": "npm run start:mainnet -w agent"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true,
+    "@reown/appkit": false
   }
 }

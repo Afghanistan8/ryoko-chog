@@ -14,7 +14,7 @@ const env = readEnv();
 if (!env.ok) {
   root.render(
     <StrictMode>
-      <main className="wrap">
+      <main className="page">
         <section className="panel setup-error">
           <h1 className="display">Ryoko Chog is not configured</h1>
           <p>{env.error}</p>
@@ -27,7 +27,7 @@ if (!env.ok) {
     </StrictMode>,
   );
 } else {
-  const wagmiConfig = makeWagmiConfig(env.network);
+  const wagmiConfig = makeWagmiConfig(env.network, import.meta.env.VITE_WALLETCONNECT_PROJECT_ID?.trim() || undefined);
   const queryClient = new QueryClient({
     defaultOptions: { queries: { refetchOnWindowFocus: false, retry: 2 } },
   });

@@ -13,7 +13,7 @@ export function App() {
   const explorer = net.chain.blockExplorers?.default.url;
 
   return (
-    <div className="wrap">
+    <div className="page">
       <header className="top">
         <a className="logo display" href="#/">
           Ryoko <span>Chog</span>

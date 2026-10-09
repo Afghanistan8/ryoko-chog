@@ -96,7 +96,8 @@ code {
   outline-offset: 3px;
 }
 
-.wrap {
+/* Page container (not .wrap, which .row uses for flex-wrap) */
+.page {
   max-width: 1440px;
   margin: 0 auto;
   padding-inline: 16px;
@@ -262,6 +263,131 @@ input[type='text'] {
 }
 .row.between {
   justify-content: space-between;
+}
+
+/* Wallet picker */
+.btn.addr {
+  text-transform: none;
+  letter-spacing: 0.02em;
+}
+.wallet-dialog {
+  width: min(420px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  padding: 0;
+  border: 2.5px solid var(--ink);
+  border-radius: 22px;
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: 6px 6px 0 var(--ink);
+  overflow: auto;
+}
+.wallet-dialog::backdrop {
+  background: rgba(22, 22, 22, 0.45);
+}
+.wallet-box {
+  display: grid;
+  gap: 14px;
+  padding: 20px;
+  text-align: left;
+}
+.wallet-box h2 {
+  font-size: 26px;
+}
+.wallet-close {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid var(--ink);
+  background: var(--card);
+  color: var(--ink);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  flex: none;
+}
+.wallet-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.wallet-option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 2px solid var(--ink);
+  border-radius: 16px;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 3px 3px 0 var(--ink);
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+}
+.wallet-option:hover:not(:disabled) {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 var(--ink);
+  background: var(--chog-soft);
+}
+.wallet-option:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+.wallet-name {
+  display: grid;
+  font-weight: 900;
+  font-size: 16px;
+  line-height: 1.2;
+}
+.wallet-name small {
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+.wallet-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  flex: none;
+  object-fit: contain;
+}
+.btn .wallet-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+}
+.wallet-icon-blank {
+  display: grid;
+  place-items: center;
+  background: var(--chog-soft);
+  border: 2px solid var(--ink);
+  font-size: 12px;
+  font-weight: 900;
+}
+.wallet-current {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+}
+.wallet-current .wallet-icon {
+  width: 40px;
+  height: 40px;
+}
+.wallet-help {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 2px dashed var(--soft);
+  border-radius: 16px;
+}
+.wallet-help .btn {
+  padding: 8px 16px;
+  font-size: 13px;
 }
 
 /* Hero: centred title over the wandering Chogs */

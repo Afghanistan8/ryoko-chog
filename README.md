@@ -182,6 +182,10 @@ npm run build:web
 
 `vercel.json` holds the build settings: install with `npm ci` at the repository root, build the `web` workspace and serve `web/dist`. Import the repository with the Root Directory left as the repository root. No environment variables are needed for mainnet. Setting `VITE_NETWORK`, `VITE_JOURNEY_ADDRESS`, `VITE_AGENT_ADDRESS` or `VITE_RPC_URL` in Vercel overrides `web/.env.production`.
 
+### Wallets
+
+The **Connect wallet** button opens a picker that lists every installed browser wallet that announces itself (EIP-6963: MetaMask, Rabby, Phantom, OKX, Backpack and others) by name and icon. On a phone with no wallet it offers to open the site inside the MetaMask or Phantom app. To add WalletConnect (QR code and mobile wallets), create a free project at [dashboard.reown.com](https://dashboard.reown.com), add the site's domain to the project's allowed domains, and set `VITE_WALLETCONNECT_PROJECT_ID` in Vercel, then redeploy.
+
 The site works with any injected browser wallet (MetaMask, Rabby and others) and offers to switch to Monad.
 
 ## Testing instructions for judges (testnet)

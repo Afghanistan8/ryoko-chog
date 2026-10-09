@@ -79,31 +79,6 @@ export function HolderPanel({ view, config, now }: Props) {
       <p className="small warn-text">Selling or moving this Chog resets its journey to swamp 1 and clears its name.</p>
 
       <ol className="steps">
-        <li className={active ? 'done' : ''}>
-          <h3>Start the journey</h3>
-          {active ? (
-            <p className="small">
-              Started. The Chog's own wallet is <code>{shortAddress(view.account)}</code>.
-            </p>
-          ) : (
-            <>
-              <p className="small">Creates the Chog's own wallet (ERC-6551) and sets it on the road to swamp 1.</p>
-              <TxButton
-                label="Start journey"
-                send={() =>
-                  writeContractAsync({
-                    address: net.journey,
-                    abi: ryokoJourneyAbi,
-                    functionName: 'startJourney',
-                    args: [view.tokenId],
-                  })
-                }
-                onConfirmed={refresh}
-              />
-            </>
-          )}
-        </li>
-
         <li className={view.name ? 'done' : ''}>
           <h3>Name your Chog</h3>
           <label htmlFor="chog-name" className="small">
@@ -137,6 +112,33 @@ export function HolderPanel({ view, config, now }: Props) {
           {problem && <p className="err">{problem}</p>}
           {!problem && name !== view.name && name.length >= 3 && reads.data && !nameFree && (
             <p className="err">That name is taken. Try another.</p>
+          )}
+        </li>
+
+        <li className={active ? 'done' : ''}>
+          <h3>Start the journey</h3>
+          {active ? (
+            <p className="small">
+              Started. The Chog's own wallet is <code>{shortAddress(view.account)}</code>.
+            </p>
+          ) : (
+            <>
+              <p className="small">Creates the Chog's own wallet (ERC-6551) and sets it on the road to swamp 1.</p>
+              <TxButton
+                label="Start journey"
+                disabled={!view.name}
+                disabledReason="Register a name for your Chog first."
+                send={() =>
+                  writeContractAsync({
+                    address: net.journey,
+                    abi: ryokoJourneyAbi,
+                    functionName: 'startJourney',
+                    args: [view.tokenId],
+                  })
+                }
+                onConfirmed={refresh}
+              />
+            </>
           )}
         </li>
 

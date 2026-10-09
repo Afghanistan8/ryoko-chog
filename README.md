@@ -176,6 +176,6 @@ The site works with any injected browser wallet (MetaMask, Rabby and others) and
 
 1. Open the site and connect a wallet on Monad testnet. Get test MON from a Monad testnet faucet for gas.
 2. Go to **My Chogs** and press **Mint a free test Chog** (up to 3 per wallet).
-3. Open the Chog. Press **Start journey**, register a name, press **Get 20,000 test CHOG**, then **Send 3,000 CHOG** to feed it three ants.
+3. Open the Chog. Register a name first, then press **Start journey**, **Get 20,000 test CHOG**, and **Send 3,000 CHOG** to feed it three ants.
 4. Press **Appoint agent**. Within a round, the agent makes the Chog eat an ant and enter swamp 1. On testnet a "day" is one minute, so it conquers after about two minutes and writes a field note.
 5. Watch the glow change, the notes fill in and the leaderboard update. **Or travel by hand** does the same steps from your wallet if you want to drive it yourself.

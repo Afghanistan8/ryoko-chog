@@ -1,0 +1,23 @@
+{
+  "name": "ryoko-chog",
+  "private": true,
+  "description": "Ryoko Chog: each Chog NFT gets its own wallet and agent and travels through nine swamps on Monad.",
+  "workspaces": [
+    "packages/shared",
+    "agent",
+    "web"
+  ],
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "abis": "node scripts/export-abis.mjs",
+    "test:contracts": "cd contracts && forge test",
+    "test:fork": "node scripts/forge-fork.mjs",
+    "test": "npm run test --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "dev:web": "npm run dev -w web",
+    "build:web": "npm run build -w web",
+    "agent": "npm run start -w agent"
+  }
+}

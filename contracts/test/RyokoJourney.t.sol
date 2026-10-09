@@ -162,6 +162,7 @@ contract RyokoJourneyTest is RyokoBase {
     function test_HolderCanActWithoutAgent() public {
         RyokoAccount account = _start(alice, aliceChog);
         _fund(account, 1);
+        _pinEvent(aliceChog, RyokoJourney.SwampEvent.Calm);
         vm.startPrank(alice);
         account.authorize(address(0), IERC20(address(token)), PRICE);
         account.execute(address(journey), 0, abi.encodeCall(RyokoJourney.travel, ()), 0);
@@ -203,7 +204,8 @@ contract RyokoJourneyTest is RyokoBase {
     function test_Travel_RevertsWhenTooLateToStay() public {
         RyokoAccount account = _ready(1);
         uint64 deadline = uint64(block.timestamp) + LEG;
-        vm.warp(block.timestamp + LEG - MIN_STAY + 1);
+        // Entering needs room for the longest stay (fog), not just the minimum stay.
+        vm.warp(block.timestamp + LEG - journey.maxStay() + 1);
         vm.prank(agentBot);
         vm.expectRevert(abi.encodeWithSelector(RyokoJourney.TooLateToEnter.selector, deadline));
         account.execute(address(journey), 0, abi.encodeCall(RyokoJourney.travel, ()), 0);
@@ -211,9 +213,11 @@ contract RyokoJourneyTest is RyokoBase {
 
     function test_Conquer_AllowedExactlyAtDeadline() public {
         RyokoAccount account = _ready(1);
-        vm.warp(block.timestamp + LEG - MIN_STAY);
-        _agentTravel(account);
-        vm.warp(block.timestamp + MIN_STAY);
+        uint64 deadline = uint64(block.timestamp) + LEG;
+        vm.warp(block.timestamp + LEG - journey.maxStay());
+        _agentTravelWith(account, RyokoJourney.SwampEvent.Fog);
+        assertEq(journey.getJourney(aliceChog).readyAt, deadline, "longest stay ends exactly at the deadline");
+        vm.warp(deadline);
         _agentConquer(account, "Just in time.");
         assertEq(journey.getJourney(aliceChog).conquered, 1);
     }
@@ -259,6 +263,7 @@ contract RyokoJourneyTest is RyokoBase {
     function test_HungryChog_CannotTravelAndExpires() public {
         RyokoAccount account = _start(alice, aliceChog);
         _authorize(alice, account);
+        _pinEvent(aliceChog, RyokoJourney.SwampEvent.Calm);
         vm.prank(agentBot);
         vm.expectRevert(
             abi.encodeWithSelector(IERC20Errors.ERC20InsufficientBalance.selector, address(account), 0, PRICE)
@@ -538,6 +543,9 @@ contract RyokoJourneyTest is RyokoBase {
         journey.setAntPrice(0);
         vm.expectRevert(RyokoJourney.InvalidConfig.selector);
         journey.setAntPrice(uint256(type(uint128).max) + 1);
+        // A rush costs two ants, so the price is capped at half of uint128.
+        vm.expectRevert(RyokoJourney.InvalidConfig.selector);
+        journey.setAntPrice(uint256(type(uint128).max) / 2 + 1);
         journey.setAntPrice(5 ether);
         vm.stopPrank();
         assertEq(journey.antPrice(), 5 ether);

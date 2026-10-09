@@ -25,6 +25,9 @@ function view(over: Partial<JourneyView>): JourneyView {
     restarts: 0,
     burned: 0n,
     name: '',
+    tier: 0,
+    swampEvent: 0,
+    rushed: false,
     ...over,
   };
 }
@@ -57,9 +60,10 @@ describe('decide', () => {
     expect(decide(view({}), ctx)).toEqual({ kind: 'travel', restart: false });
   });
 
-  it('travels exactly when the minimum stay still fits before the deadline', () => {
-    expect(decide(view({}), { ...ctx, now: 1000n + 540n - 120n }).kind).toBe('travel');
-    expect(decide(view({}), { ...ctx, now: 1000n + 540n - 119n }).kind).toBe('wait');
+  it('travels exactly when the longest stay (fog) still fits before the deadline', () => {
+    // minStay 120 -> longest stay 150
+    expect(decide(view({}), { ...ctx, now: 1000n + 540n - 150n }).kind).toBe('travel');
+    expect(decide(view({}), { ...ctx, now: 1000n + 540n - 149n }).kind).toBe('wait');
   });
 
   it('waits when hungry or the allowance is too low', () => {

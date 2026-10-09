@@ -1,4 +1,4 @@
-import { Status, type JourneyView } from '@ryoko/shared';
+import { maxStay, Status, type JourneyView } from '@ryoko/shared';
 import type { Address } from 'viem';
 
 export type Decision =
@@ -35,7 +35,8 @@ export function decide(view: JourneyView, ctx: DecisionContext): Decision {
     case Status.InSwamp:
       return { kind: 'wait', reason: `resting until ${view.readyAt}` };
     case Status.Travelling: {
-      if (ctx.now + ctx.minStay > view.deadline) {
+      // The contract only lets a Chog in if the longest stay (fog) still ends by the deadline.
+      if (ctx.now + maxStay(ctx.minStay) > view.deadline) {
         return { kind: 'wait', reason: 'too late to enter; the swamp restarts after the deadline' };
       }
       return feed(ctx, false);

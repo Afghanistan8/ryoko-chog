@@ -1,0 +1,36 @@
+# systemd service for the Ryoko Chog agent, one instance per network:
+#   ryoko-agent@testnet  reads /opt/ryoko-chog/agent/.env.testnet
+#   ryoko-agent@mainnet  reads /opt/ryoko-chog/agent/.env.mainnet
+# Install: see deploy/VPS.md
+[Unit]
+Description=Ryoko Chog agent (%i)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ryoko
+Group=ryoko
+WorkingDirectory=/opt/ryoko-chog/agent
+# /usr/bin/env finds node wherever it is installed (e.g. /usr/local/bin from the official tarball).
+ExecStart=/usr/bin/env node --import tsx src/index.ts --env .env.%i
+Restart=always
+RestartSec=10
+# Give the agent time to finish a round before stopping.
+TimeoutStopSec=90
+KillSignal=SIGTERM
+
+# Hardening: the agent only needs the network and its own folder (for its state file).
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/ryoko-chog/agent
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+
+[Install]
+WantedBy=multi-user.target

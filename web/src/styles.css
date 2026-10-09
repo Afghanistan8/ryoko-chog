@@ -183,6 +183,32 @@ nav a[aria-current='page'] {
   color: var(--paper);
 }
 
+/* Mainnet / Testnet switch */
+.net-switch {
+  display: inline-flex;
+  padding: 3px;
+  border: 2.5px solid var(--ink);
+  border-radius: 999px;
+  background: var(--card);
+  box-shadow: 2px 2px 0 var(--ink);
+}
+.net-switch button {
+  font: 800 13px/1 var(--ui);
+  color: var(--ink);
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+  padding: 7px 12px;
+  cursor: pointer;
+}
+.net-switch button.on {
+  background: var(--ink);
+  color: #fff;
+}
+.net-switch button:not(.on):hover {
+  background: var(--chog-soft);
+}
+
 /* Buttons and forms */
 .btn {
   display: inline-flex;
@@ -871,6 +897,95 @@ input[type='text'] {
 .manual .btn {
   padding: 9px 18px;
   font-size: 14px;
+}
+
+/* Set off: one transaction */
+.setoff {
+  display: grid;
+  gap: 14px;
+}
+.field {
+  display: grid;
+  gap: 6px;
+}
+.field label {
+  display: grid;
+  gap: 2px;
+}
+.agent-choice {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  align-items: start;
+  padding: 12px 14px;
+  border: 2px solid var(--ink);
+  border-radius: 16px;
+  background: var(--chog-soft);
+  cursor: pointer;
+}
+.agent-choice input {
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  accent-color: var(--chog);
+}
+.agent-choice > span {
+  display: grid;
+  gap: 4px;
+}
+
+/* Swamp events */
+.event-chip {
+  display: inline-block;
+  font-family: var(--ui);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 1px 8px;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ink);
+  vertical-align: middle;
+}
+.event-chip.ev-2 {
+  background: #c8f3c0;
+}
+.event-chip.ev-3 {
+  background: #dfe3ea;
+}
+.event-chip.ev-4 {
+  background: #ffe0a6;
+}
+.event-chip.ev-5 {
+  background: var(--gold-bright);
+}
+
+/* Sharing */
+.share {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.share .btn {
+  padding: 7px 16px;
+  font-size: 13px;
+}
+.notes .share {
+  margin-top: 6px;
+}
+.conquest {
+  background: #fffbea;
+}
+.conquest-card {
+  width: 100%;
+  height: auto;
+  border: 2.5px solid var(--ink);
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm);
+  background: var(--paper-2);
 }
 
 /* My Chogs */

@@ -8,6 +8,7 @@ import { ChogPortrait } from '../components/ChogPortrait';
 import { HolderPanel } from '../components/HolderPanel';
 import { ProgressPanel } from '../components/ProgressPanel';
 import { ConnectButton } from '../components/ConnectButton';
+import { ConquestBanner } from '../components/ConquestBanner';
 import { LazyDiorama } from '../diorama/LazyDiorama';
 import { journeyToDiorama } from '../diorama/state';
 import { chogLabel, shortAddress } from '../format';
@@ -30,6 +31,13 @@ export function ChogPage({ id }: { id: bigint }) {
     args: [id],
     query: { refetchInterval: 20_000, enabled: exists },
   });
+  const events = useReadContract({
+    address: net.journey,
+    abi: ryokoJourneyAbi,
+    functionName: 'eventsOf',
+    args: [id],
+    query: { refetchInterval: 20_000, enabled: exists },
+  });
   const walletChog = useReadContract({
     address: net.chogToken,
     abi: erc20Abi,
@@ -45,7 +53,7 @@ export function ChogPage({ id }: { id: bigint }) {
 
   // Rebuild the 3D state only when something it draws actually changes.
   const dKey = view
-    ? [view.status, view.conquered, view.currentSwamp, view.ants, name, glow, antsInWallet > 0].join('|')
+    ? [view.status, view.conquered, view.currentSwamp, view.ants, view.swampEvent, view.rushed, name, glow, antsInWallet > 0].join('|')
     : '';
   const dstate = useMemo(
     () =>
@@ -57,7 +65,23 @@ export function ChogPage({ id }: { id: bigint }) {
   );
 
   if (journeys.isLoading || config.isLoading) return <p className="muted pad">Wading out to find this Chog…</p>;
-  if (journeys.isError) return <p className="err pad">Could not read the journey contract. Check the RPC and try again.</p>;
+  if (journeys.isError || config.isError) {
+    return (
+      <section className="panel pad center">
+        <p className="err">Could not read the journey contract right now. The network may be busy.</p>
+        <button
+          type="button"
+          className="btn ghost"
+          onClick={() => {
+            void journeys.refetch();
+            void config.refetch();
+          }}
+        >
+          Try again
+        </button>
+      </section>
+    );
+  }
   if (!view || !exists || !dstate || !config.data) {
     return (
       <section className="panel pad">
@@ -84,6 +108,7 @@ export function ChogPage({ id }: { id: bigint }) {
       </header>
 
       <aside className="col-left" aria-label="Journey steps">
+        {isHolder && <ConquestBanner view={view} name={name} events={events.data ?? []} />}
         {isHolder ? (
           <HolderPanel view={view} config={config.data} now={now} />
         ) : (
@@ -131,6 +156,7 @@ export function ChogPage({ id }: { id: bigint }) {
           dstate={dstate}
           selected={selected}
           notes={notes.data ?? []}
+          events={events.data ?? []}
           antsInWallet={antsInWallet}
         />
       </aside>

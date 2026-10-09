@@ -3,5 +3,10 @@
   "framework": "vite",
   "installCommand": "npm ci",
   "buildCommand": "npm run build -w @ryoko/web",
-  "outputDirectory": "web/dist"
+  "outputDirectory": "web/dist",
+  "functions": {
+    "api/og.ts": { "includeFiles": "api/_assets/**", "maxDuration": 20 },
+    "api/share.ts": { "maxDuration": 15 }
+  },
+  "rewrites": [{ "source": "/s/:net/:id/:swamp", "destination": "/api/share?net=:net&id=:id&swamp=:swamp" }]
 }

@@ -4,6 +4,8 @@ pragma solidity 0.8.30;
 import {Test} from "forge-std/Test.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import {IERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol";
+import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 
 import {RyokoAccount} from "../../src/RyokoAccount.sol";
 import {RyokoJourney} from "../../src/RyokoJourney.sol";
@@ -54,6 +56,7 @@ contract MonadMainnetForkTest is Test {
 
         uint256 deadBefore = CHOG.balanceOf(DEAD);
         uint256 supplyBefore = CHOG.totalSupply();
+        _pinCalm(tokenId);
         vm.prank(agentBot);
         account.execute(address(journey), 0, abi.encodeCall(RyokoJourney.travel, ()), 0);
 
@@ -65,6 +68,65 @@ contract MonadMainnetForkTest is Test {
         vm.prank(agentBot);
         account.execute(address(journey), 0, abi.encodeCall(RyokoJourney.conquer, ("Swamp 1 conquered.")), 0);
         assertEq(journey.getJourney(tokenId).conquered, 1);
+    }
+
+    /// One transaction on the real contracts: name, journey, agent and ants via a real $CHOG permit.
+    function test_Fork_BeginWithRealChogPermit() public {
+        uint256 tokenId = 1;
+        (address player, uint256 key) = makeAddrAndKey("player");
+        address realHolder = CHOG_GENESIS.ownerOf(tokenId);
+        vm.prank(realHolder);
+        CHOG_GENESIS.transferFrom(realHolder, player, tokenId);
+        vm.prank(CHOG_SOURCE);
+        assertTrue(CHOG.transfer(player, PRICE * 3));
+
+        uint256 deadline = block.timestamp + 1 hours;
+        bytes32 structHash = keccak256(
+            abi.encode(
+                keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)"),
+                player,
+                address(journey),
+                PRICE * 3,
+                IERC20Permit(address(CHOG)).nonces(player),
+                deadline
+            )
+        );
+        bytes32 digest = MessageHashUtils.toTypedDataHash(IERC20Permit(address(CHOG)).DOMAIN_SEPARATOR(), structHash);
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(key, digest);
+
+        vm.prank(player);
+        RyokoAccount account = RyokoAccount(
+            payable(journey.begin(tokenId, "Fork Chog", agentBot, 3, RyokoJourney.Permit(deadline, v, r, s)))
+        );
+
+        assertEq(journey.nameOf(tokenId), "Fork Chog");
+        assertEq(account.agent(), agentBot);
+        assertEq(CHOG.balanceOf(address(account)), PRICE * 3, "three ants moved by permit");
+        assertEq(CHOG.balanceOf(player), 0);
+        assertEq(CHOG.allowance(player, address(journey)), 0, "permit used up exactly");
+        assertEq(CHOG.allowance(address(account), address(journey)), type(uint256).max);
+
+        // Rush on the real token too.
+        _pinCalm(tokenId);
+        vm.prank(agentBot);
+        account.execute(address(journey), 0, abi.encodeCall(RyokoJourney.travel, ()), 0);
+        uint256 deadBefore = CHOG.balanceOf(DEAD);
+        vm.prank(player);
+        account.execute(address(journey), 0, abi.encodeCall(RyokoJourney.rush, ()), 0);
+        assertEq(CHOG.balanceOf(DEAD) - deadBefore, PRICE * 2, "rush burns exactly two ants");
+        assertEq(journey.getJourney(tokenId).readyAt, block.timestamp + MIN_STAY / 2);
+    }
+
+    function _pinCalm(uint256 tokenId) internal {
+        RyokoJourney.JourneyView memory jv = journey.getJourney(tokenId);
+        for (uint256 r = 1; r < 10_000; ++r) {
+            uint256 seed = uint256(keccak256(abi.encode(r, tokenId, jv.journeyId, jv.conquered + 1, jv.restarts)));
+            if (journey.rollEvent(seed, journey.tierOf(tokenId)) == RyokoJourney.SwampEvent.Calm) {
+                vm.prevrandao(r);
+                return;
+            }
+        }
+        revert("no calm roll");
     }
 
     function test_Fork_BatchViewCoversCollection() public view {

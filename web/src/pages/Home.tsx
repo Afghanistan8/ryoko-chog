@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { useAccount } from 'wagmi';
-import { compareForLeaderboard, displaySwamp, formatTokens, glowLevel, Status, SWAMPS } from '@ryoko/shared';
+import { compareForLeaderboard, displaySwamp, formatTokens, glowLevel, RUSH_ANTS, Status, SWAMPS } from '@ryoko/shared';
 import { useAllJourneys, useJourneyConfig, usePrefersReducedMotion } from '../hooks';
 import { useNetwork } from '../network';
 import { Leaderboard } from '../components/Leaderboard';
@@ -180,11 +180,19 @@ export function Home() {
               {config.data ? `${formatTokens(config.data.antPrice)} CHOG` : 'a set amount of CHOG'}, burned.
             </li>
             <li>
-              <span>D</span>It stays at least {config.data ? formatSpan(config.data.minStay) : '2 days'} and must
+              <span>D</span>It stays {config.data ? formatSpan(config.data.minStay) : '2 days'} in each swamp and must
               conquer within {config.data ? formatSpan(config.data.legDuration) : '9 days'} of setting out.
             </li>
             <li>
-              <span>R</span>Miss the deadline and that swamp restarts. Earlier swamps stay conquered.
+              <span>E</span>Every swamp rolls an event: a shortcut, fog, an ant nest that spares the ant, or a relic.
+              Rarer Chogs (by their official Tier) find more shortcuts, nests and relics.
+            </li>
+            <li>
+              <span>R</span>In a hurry? Rush a swamp: eat {RUSH_ANTS} extra ants to cut{' '}
+              {config.data ? formatSpan(config.data.minStay / 2n) : 'a day'} off the stay.
+            </li>
+            <li>
+              <span>M</span>Miss the deadline and that swamp restarts. Earlier swamps stay conquered.
             </li>
             <li>
               <span>N</span>Each conquered swamp gets a field note, written on-chain.

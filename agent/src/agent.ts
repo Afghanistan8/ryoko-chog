@@ -4,6 +4,7 @@ import {
   testChogGenesisAbi,
   traitsOf,
   writeNote,
+  type SwampEventValue,
   Status,
   type Traits,
 } from '@ryoko/shared';
@@ -88,6 +89,8 @@ export class ChogAgent {
             journeyId: view.journeyId,
             restarts: view.restarts,
             traits: await this.traits(view.tokenId),
+            event: view.swampEvent as SwampEventValue,
+            rushed: view.rushed,
           });
           const tx = await actThroughAccount(this.chain, view.account, journey, conquerData(note), this.cfg.dryRun);
           summary.conquered++;

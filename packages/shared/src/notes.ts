@@ -1,4 +1,5 @@
 import type { Traits } from './metadata';
+import { EVENT_INFO, type SwampEventValue } from './events';
 
 /**
  * Field notes the agent posts when a Chog conquers a swamp.
@@ -127,9 +128,13 @@ export interface NoteInput {
   journeyId: bigint;
   restarts: number;
   traits?: Traits;
+  /** The swamp's event; a notable one replaces the trait line. */
+  event?: SwampEventValue;
+  /** Whether the Chog rushed this swamp. */
+  rushed?: boolean;
 }
 
-export function writeNote({ swamp, tokenId, journeyId, restarts, traits = {} }: NoteInput): string {
+export function writeNote({ swamp, tokenId, journeyId, restarts, traits = {}, event, rushed }: NoteInput): string {
   if (!Number.isInteger(swamp) || swamp < 1 || swamp > 9) throw new Error(`swamp must be 1-9, got ${swamp}`);
   const seed = hash([tokenId, journeyId, swamp, restarts]);
   const head = `Swamp ${swamp} conquered.`;
@@ -137,8 +142,13 @@ export function writeNote({ swamp, tokenId, journeyId, restarts, traits = {} }: 
   const swampLine = lines[seed % lines.length]!;
 
   const usable = TRAIT_LINES.map((l) => ({ l, v: safeTraitValue(traits[l.trait]) })).filter((x) => x.v);
+  const eventLine = event !== undefined ? EVENT_INFO[event]?.noteLine : '';
   let tail: string;
-  if (usable.length > 0) {
+  if (eventLine) {
+    tail = eventLine;
+  } else if (rushed) {
+    tail = 'Ran most of the way.';
+  } else if (usable.length > 0) {
     const pick = usable[(seed >>> 8) % usable.length]!;
     tail = pick.l.template.replace('{v}', pick.v!);
   } else {

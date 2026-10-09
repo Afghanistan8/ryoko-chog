@@ -23,6 +23,10 @@ import {TestChogToken} from "../src/mocks/TestChogToken.sol";
 ///   ANT_PRICE    wei of $CHOG per ant (optional, default 1000e18)
 ///   MIN_STAY     seconds (optional; default 2 days on mainnet, 120 on testnet)
 ///   LEG_DURATION seconds (optional; default 9 days on mainnet, 540 on testnet)
+///   SKIP_TIERS   true to deploy without loading the Chog tiers (optional, default false)
+///
+/// Chog tiers come from packages/shared/src/tiers.json (built by scripts/build-tiers.mjs from the
+/// Chog Genesis metadata). They are loaded and frozen in the same run, so they can never change.
 contract Deploy is Script {
     IERC6551Registry internal constant REGISTRY = IERC6551Registry(0x000000006551c19487814612e58FE06813775758);
     bytes32 internal constant REGISTRY_CODEHASH = 0xda1d5b06e579f9e42e59b00fbc22939896ecb38dc8830d40de0a2508fecd6735;
@@ -36,6 +40,8 @@ contract Deploy is Script {
     error UnsupportedChain(uint256 chainId);
     error RegistryMismatch();
     error AddressPredictionFailed();
+    error TiersIncomplete();
+    error BadTierData();
 
     function run() external returns (RyokoJourney journey, RyokoAccount impl, address chog, address chogToken) {
         bool mainnet = block.chainid == MONAD_MAINNET;
@@ -47,6 +53,8 @@ contract Deploy is Script {
         uint256 antPrice = vm.envOr("ANT_PRICE", uint256(1_000 ether));
         uint64 minStay = uint64(vm.envOr("MIN_STAY", mainnet ? uint256(2 days) : uint256(120)));
         uint64 legDuration = uint64(vm.envOr("LEG_DURATION", mainnet ? uint256(9 days) : uint256(540)));
+        bool skipTiers = vm.envOr("SKIP_TIERS", false);
+        uint256[] memory tierWords = skipTiers ? new uint256[](0) : _tierWords(mainnet ? ".mainnet" : ".testnet");
 
         vm.startBroadcast();
         // The broadcasting wallet, however the key was supplied (--private-key, --interactives, --account).
@@ -70,6 +78,10 @@ contract Deploy is Script {
         if (address(journey) != predicted) revert AddressPredictionFailed();
 
         if (resetter != address(0)) journey.setResetter(resetter);
+        if (!skipTiers) {
+            journey.setTierWords(0, tierWords);
+            journey.freezeTiers();
+        }
         if (owner != deployer) journey.transferOwnership(owner);
         vm.stopBroadcast();
 
@@ -82,6 +94,22 @@ contract Deploy is Script {
         console2.log("minStay (s)       ", minStay);
         console2.log("legDuration (s)   ", legDuration);
         console2.log("resetter          ", resetter);
+        console2.log("tiers loaded      ", !skipTiers);
         if (owner != deployer) console2.log("pending owner (must call acceptOwnership)", owner);
+    }
+
+    /// @dev Packs one tier digit per token into 32-byte words, token id i at byte (i-1) % 32 of
+    ///      word (i-1) / 32, exactly as RyokoJourney.tierOf reads them.
+    function _tierWords(string memory key) internal view returns (uint256[] memory words) {
+        string memory json = vm.readFile(string.concat(vm.projectRoot(), "/../packages/shared/src/tiers.json"));
+        if (!vm.parseJsonBool(json, ".complete")) revert TiersIncomplete();
+        bytes memory digits = bytes(vm.parseJsonString(json, key));
+        if (digits.length != 1969) revert BadTierData();
+        words = new uint256[]((digits.length + 31) / 32);
+        for (uint256 i; i < digits.length; ++i) {
+            uint8 c = uint8(digits[i]);
+            if (c < 0x30 || c > 0x39) revert BadTierData();
+            words[i / 32] |= uint256(c - 0x30) << ((i % 32) * 8);
+        }
     }
 }

@@ -1,7 +1,21 @@
-import { SWAMPS, Status, STATUS_LABEL, formatTokens, type JourneyView } from '@ryoko/shared';
+import {
+  decodeEventRecord,
+  EVENT_INFO,
+  eventOdds,
+  maxStay,
+  SWAMPS,
+  Status,
+  STATUS_LABEL,
+  formatTokens,
+  tierName,
+  type JourneyView,
+  type SwampEventValue,
+} from '@ryoko/shared';
 import type { JourneyConfig } from '../hooks';
+import { useNetwork } from '../network';
 import { formatDuration, shortAddress } from '../format';
 import { swampState, type DioramaState } from '../diorama/state';
+import { ShareButton } from './ShareButton';
 
 interface Props {
   view: JourneyView;
@@ -10,6 +24,8 @@ interface Props {
   dstate: DioramaState;
   selected: number;
   notes: readonly string[];
+  /** eventsOf: per swamp, the event plus 0x80 if rushed. */
+  events: readonly number[];
   antsInWallet: number;
 }
 
@@ -27,10 +43,22 @@ const ANT = (
 );
 
 /** Right-hand column of the Chog page: what is happening now, what comes next, and the record so far. */
-export function ProgressPanel({ view, config, now, dstate, selected, notes, antsInWallet }: Props) {
+export function ProgressPanel({ view, config, now, dstate, selected, notes, events, antsInWallet }: Props) {
+  const net = useNetwork();
   const glow = dstate.glow;
   const sel = SWAMPS[selected]!;
   const selState = swampState(dstate, selected);
+  const record = (i: number) => decodeEventRecord(events[i] ?? 0);
+  const selRecord = record(selected);
+  const odds = eventOdds(view.tier);
+  const share = (i: number) => ({
+    net: net.name,
+    tokenId: view.tokenId,
+    swamp: i + 1,
+    name: dstate.name,
+    eventLabel: record(i).event > 1 ? EVENT_INFO[record(i).event].label : '',
+    complete: i === 8 && view.status === Status.Complete,
+  });
 
   return (
     <div className="progress">
@@ -72,8 +100,16 @@ export function ProgressPanel({ view, config, now, dstate, selected, notes, ants
         <h2 id="sel-h" className="display">
           {sel.name}
         </h2>
+        {selRecord.event !== 0 && (
+          <p className="small tight">
+            <EventChip event={selRecord.event} rushed={selRecord.rushed} /> {EVENT_INFO[selRecord.event].line}
+          </p>
+        )}
         {selState === 'done' && notes[selected] ? (
-          <blockquote className="note-quote">"{notes[selected]}"</blockquote>
+          <>
+            <blockquote className="note-quote">"{notes[selected]}"</blockquote>
+            <ShareButton input={share(selected)} withImage />
+          </>
         ) : (
           <p className="small muted tight">{sel.mood}.</p>
         )}
@@ -101,10 +137,18 @@ export function ProgressPanel({ view, config, now, dstate, selected, notes, ants
             <dd className="num">{view.restarts}</dd>
           </div>
           <div>
+            <dt>Tier</dt>
+            <dd title={`Swamp odds: shortcut ${odds[2]}%, ant nest ${odds[4]}%, relic ${odds[5]}%, fog ${odds[3]}%`}>{tierName(view.tier)}</dd>
+          </div>
+          <div>
             <dt>Agent</dt>
             <dd>{/^0x0+$/.test(view.agent) ? 'None' : <code>{shortAddress(view.agent)}</code>}</dd>
           </div>
         </dl>
+        <p className="small muted tight">
+          {tierName(view.tier)} Chogs find a shortcut {odds[2]}% of the time, an ant nest {odds[4]}%, a relic {odds[5]}%, and
+          get lost in fog {odds[3]}%.
+        </p>
         {notes.some(Boolean) && (
           <ol className="notes">
             {notes
@@ -113,14 +157,27 @@ export function ProgressPanel({ view, config, now, dstate, selected, notes, ants
               .reverse()
               .map(({ n, i }) => (
                 <li key={i} style={{ borderColor: `rgb(${SWAMPS[i]!.glow})` }}>
-                  <span className="eyebrow">{SWAMPS[i]!.name}</span>
+                  <span className="eyebrow">
+                    {SWAMPS[i]!.name} {record(i).event > 1 && <EventChip event={record(i).event} rushed={record(i).rushed} />}
+                  </span>
                   <p>{n}</p>
+                  <ShareButton input={share(i)} />
                 </li>
               ))}
           </ol>
         )}
       </section>
     </div>
+  );
+}
+
+function EventChip({ event, rushed }: { event: SwampEventValue; rushed?: boolean }) {
+  if (event === 0) return null;
+  return (
+    <span className={`event-chip ev-${event}`}>
+      {EVENT_INFO[event].label}
+      {rushed ? ' · rushed' : ''}
+    </span>
   );
 }
 
@@ -139,7 +196,7 @@ function NowDetail({ view, config, now, antsInWallet }: { view: JourneyView; con
     case Status.None:
       return <p className="small muted tight">Start the journey to send this Chog to swamp 1.</p>;
     case Status.Travelling: {
-      const fits = now + config.minStay <= view.deadline;
+      const fits = now + maxStay(config.minStay) <= view.deadline;
       return (
         <>
           <div className="q-row">
@@ -164,7 +221,13 @@ function NowDetail({ view, config, now, antsInWallet }: { view: JourneyView; con
             <span>Resting, conquers in</span>
             <b className="num">{formatDuration(left(view.readyAt))}</b>
           </div>
-          {bar(now - view.enteredAt, config.minStay)}
+          {bar(now - view.enteredAt, view.readyAt - view.enteredAt)}
+          {view.swampEvent !== 0 && (
+            <p className="small tight">
+              <EventChip event={view.swampEvent as SwampEventValue} rushed={view.rushed} />{' '}
+              {EVENT_INFO[view.swampEvent as SwampEventValue].line} {EVENT_INFO[view.swampEvent as SwampEventValue].effect}
+            </p>
+          )}
           <p className="small muted tight">Then the agent writes a field note and the Chog moves on.</p>
         </>
       );

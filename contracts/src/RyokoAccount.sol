@@ -139,15 +139,21 @@ contract RyokoAccount is
     function authorize(address newAgent, IERC20 tokenToApprove, uint256 allowance) external {
         address holder = owner();
         if (msg.sender != holder || holder == address(0)) revert NotAuthorized();
-
-        ++_state;
-        _agent = newAgent;
-        _agentGrantedBy = newAgent == address(0) ? address(0) : holder;
-        emit AgentSet(newAgent, holder);
-
+        _setAgent(newAgent, holder);
         if (address(tokenToApprove) != address(0)) {
             tokenToApprove.forceApprove(journey, allowance);
         }
+    }
+
+    /// @notice Journey contract only, while the holder starts a journey in one transaction
+    ///         (`RyokoJourney.begin`, which checks the caller holds the Chog). Appoints the agent
+    ///         (zero for none) and lets the journey contract take ant payments in `token_`.
+    /// @dev `holder` must still be this account's owner, so a stale holder can never set it up.
+    function setupFromJourney(address holder, address newAgent, IERC20 token_) external {
+        if (msg.sender != journey) revert NotAuthorized();
+        if (holder == address(0) || holder != owner()) revert NotAuthorized();
+        _setAgent(newAgent, holder);
+        token_.forceApprove(journey, type(uint256).max);
     }
 
     // ---------------------------------------------------------------------
@@ -205,6 +211,13 @@ contract RyokoAccount is
     // ---------------------------------------------------------------------
     // Internal
     // ---------------------------------------------------------------------
+
+    function _setAgent(address newAgent, address holder) internal {
+        ++_state;
+        _agent = newAgent;
+        _agentGrantedBy = newAgent == address(0) ? address(0) : holder;
+        emit AgentSet(newAgent, holder);
+    }
 
     /// @dev ownerOf that returns zero instead of reverting (missing token, non-contract, bad return data).
     function _ownerOf(address tokenContract, uint256 tokenId) internal view returns (address holder) {

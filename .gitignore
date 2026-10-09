@@ -14,8 +14,6 @@ web/dist/
 .env
 .env.*
 !.env.example
-# Public mainnet addresses for the production web build
-!web/.env.production
 
 # Agent runtime state
 .agent-state*.json
@@ -29,3 +27,9 @@ Thumbs.db
 
 # Forge keeps a timestamped copy of each run; run-latest.json is enough
 contracts/broadcast/**/run-[0-9]*.json
+
+# Metadata cache for scripts/build-tiers.mjs
+scripts/.cache/
+
+# Vercel CLI local output
+.vercel/

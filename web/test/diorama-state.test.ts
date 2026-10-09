@@ -22,6 +22,9 @@ function view(over: Partial<JourneyView>): JourneyView {
     restarts: 0,
     burned: 0n,
     name: 'ox6214',
+    tier: 0,
+    swampEvent: 0,
+    rushed: false,
     ...over,
   };
 }
@@ -65,5 +68,17 @@ describe('journeyToDiorama', () => {
     expect(s).toMatchObject({ complete: true, chogAt: 8, target: 8, glow: 9, conquered: 9 });
     for (let i = 0; i < 9; i++) expect(swampState(s, i)).toBe('done');
     expect(s.subtitle).toBe('Gold · journey complete');
+  });
+});
+
+describe('journeyToDiorama swamp events', () => {
+  it('shows a notable event and a rush instead of the glow name', () => {
+    const s = journeyToDiorama(view({ status: Status.InSwamp, currentSwamp: 3, conquered: 2, swampEvent: 5, rushed: true }), opts);
+    expect(s.subtitle).toBe('Relic · rushed · swamp 3');
+  });
+
+  it('keeps the glow name for calm waters', () => {
+    const s = journeyToDiorama(view({ status: Status.InSwamp, currentSwamp: 3, conquered: 2, swampEvent: 1 }), opts);
+    expect(s.subtitle).toBe('Spore violet glow · swamp 3');
   });
 });

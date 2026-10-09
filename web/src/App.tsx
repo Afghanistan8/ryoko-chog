@@ -1,6 +1,7 @@
 import { useRoute } from './hooks';
 import { useNetwork } from './network';
 import { ConnectButton } from './components/ConnectButton';
+import { NetworkSwitch } from './components/NetworkSwitch';
 import { Home } from './pages/Home';
 import { Mine } from './pages/Mine';
 import { LeaderboardPage } from './pages/LeaderboardPage';
@@ -29,6 +30,7 @@ export function App() {
             Leaderboard
           </a>
         </nav>
+        <NetworkSwitch />
         <ConnectButton />
       </header>
 

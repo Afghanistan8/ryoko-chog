@@ -19,8 +19,8 @@ if (!env.ok) {
           <h1 className="display">Ryoko Chog is not configured</h1>
           <p>{env.error}</p>
           <p className="muted">
-            Copy <code>web/.env.example</code> to <code>web/.env.local</code> and fill in the contract addresses
-            printed by the deploy script.
+            Add the deployment to <code>packages/shared/src/deployments.ts</code>, or override it in{' '}
+            <code>web/.env.local</code> (see <code>web/.env.example</code>).
           </p>
         </section>
       </main>
@@ -35,7 +35,7 @@ if (!env.ok) {
     <StrictMode>
       <WagmiProvider config={wagmiConfig}>
         <QueryClientProvider client={queryClient}>
-          <NetworkProvider network={env.network}>
+          <NetworkProvider network={env.network} available={env.available}>
             <App />
           </NetworkProvider>
         </QueryClientProvider>

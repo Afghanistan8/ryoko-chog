@@ -65,3 +65,28 @@ describe('formatSpan', () => {
     expect(formatSpan(-5n)).toBe('0 seconds');
   });
 });
+
+describe('share', () => {
+  it('writes a post that fits on X with the link and names the swamp', async () => {
+    const { shareText, shareLinks } = await import('../src/share');
+    const input = { net: 'mainnet' as const, tokenId: 1462n, swamp: 6, name: 'Sir Squelch 2', eventLabel: 'Lost in the fog' };
+    const text = shareText(input);
+    expect(text).toContain('Mist Marsh');
+    expect(text).toContain('swamp 6 of 9');
+    expect(text).toContain('$CHOG');
+    // X counts every link as 23 characters.
+    expect(text.length + 1 + 23).toBeLessThanOrEqual(280);
+    const links = shareLinks(input, 'https://ryoko-chog.vercel.app');
+    expect(links.page).toBe('https://ryoko-chog.vercel.app/s/mainnet/1462/6');
+    expect(links.image).toBe('https://ryoko-chog.vercel.app/api/og?net=mainnet&id=1462&swamp=6');
+    const intent = new URL(links.intent);
+    expect(intent.origin + intent.pathname).toBe('https://twitter.com/intent/tweet');
+    expect(intent.searchParams.get('url')).toBe(links.page);
+    expect(intent.searchParams.get('text')).toBe(text);
+  });
+
+  it('celebrates a finished journey', async () => {
+    const { shareText } = await import('../src/share');
+    expect(shareText({ net: 'testnet', tokenId: 1n, swamp: 9, name: 'Gnarlo', complete: true })).toMatch(/all nine swamps/);
+  });
+});

@@ -1,4 +1,4 @@
-import { Status, glowLevel, displaySwamp, type JourneyView } from '@ryoko/shared';
+import { EVENT_INFO, Status, glowLevel, displaySwamp, type JourneyView, type SwampEventValue } from '@ryoko/shared';
 
 export type SwampState = 'done' | 'now' | 'locked';
 
@@ -39,7 +39,11 @@ export function journeyToDiorama(view: JourneyView, opts: { name: string; glowNa
   if (!started) subtitle = 'Not travelling yet';
   else if (complete) subtitle = 'Gold · journey complete';
   else if (view.status === Status.Travelling) subtitle = `Heading for swamp ${view.conquered + 1}`;
-  else subtitle = `${opts.glowName} glow · swamp ${view.currentSwamp}`;
+  else {
+    // A notable swamp event (shortcut, fog, ant nest, relic) says more than the glow colour.
+    const lead = view.swampEvent > 1 ? EVENT_INFO[view.swampEvent as SwampEventValue].label : `${opts.glowName} glow`;
+    subtitle = `${lead}${view.rushed ? ' · rushed' : ''} · swamp ${view.currentSwamp}`;
+  }
   return {
     conquered: started ? view.conquered : 0,
     target,

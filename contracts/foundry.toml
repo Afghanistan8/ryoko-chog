@@ -5,6 +5,8 @@ libs = ["lib"]
 solc_version = "0.8.30"
 evm_version = "cancun"
 network = "monad"
+# The deploy script reads the Chog tiers built by scripts/build-tiers.mjs.
+fs_permissions = [{ access = "read", path = "../packages/shared/src/tiers.json" }]
 optimizer = true
 optimizer_runs = 10000
 remappings = [

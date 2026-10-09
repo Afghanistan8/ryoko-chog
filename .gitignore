@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Foundry
+contracts/out/
+contracts/cache/
+contracts/broadcast/*/dry-run/
+contracts/broadcast/*/31337/
+
+# Builds
+web/dist/
+
+# Secrets and local config
+.env
+.env.*
+!.env.example
+
+# Agent runtime state
+.agent-state.json
+*.log
+
+# OS and editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

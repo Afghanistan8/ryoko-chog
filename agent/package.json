@@ -1,0 +1,23 @@
+{
+  "name": "@ryoko/agent",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Ryoko Chog agent: makes enrolled Chogs eat ants, travel and conquer swamps through their own accounts.",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "once": "tsx src/index.ts --once",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@ryoko/shared": "0.1.0",
+    "viem": "2.56.8"
+  },
+  "devDependencies": {
+    "@types/node": "24.13.6",
+    "tsx": "4.23.15",
+    "typescript": "6.0.3",
+    "vitest": "5.0.1"
+  }
+}

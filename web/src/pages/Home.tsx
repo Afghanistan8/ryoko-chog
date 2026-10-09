@@ -4,6 +4,7 @@ import { compareForLeaderboard, displaySwamp, formatTokens, glowLevel, Status, S
 import { useAllJourneys, useJourneyConfig, usePrefersReducedMotion } from '../hooks';
 import { useNetwork } from '../network';
 import { Leaderboard } from '../components/Leaderboard';
+import { ChogCrowd } from '../components/ChogCrowd';
 import { LazyDiorama } from '../diorama/LazyDiorama';
 import { journeyToDiorama, type DioramaState } from '../diorama/state';
 import { chogLabel, formatDuration } from '../format';
@@ -72,20 +73,24 @@ export function Home() {
   return (
     <div className="home">
       <section className="hero" aria-labelledby="hero-h">
-        <h1 id="hero-h" className="display hero-title">
-          Ryoko <span>Chog</span>
-        </h1>
-        <p className="hero-sub">
-          Your Chog gets its own wallet and an agent. Feed it ants made of $CHOG, and it walks nine swamps on Monad,
-          writing a note each time it conquers one. The further it goes, the brighter it glows.
-        </p>
-        <div className="row wrap">
-          <a className="btn" href="#/mine">
-            {address ? 'My Chogs' : 'Start with your Chog'}
-          </a>
-          <a className="btn ghost" href="#/leaderboard">
-            Leaderboard
-          </a>
+        <ChogCrowd />
+        <div className="hero-inner">
+          <h1 id="hero-h" className="hero-title" aria-label="Ryoko Chog">
+            <span>Ryoko</span>
+            <span>Chog</span>
+          </h1>
+          <p className="hero-sub">
+            Your Chog gets its own wallet and an agent. Feed it ants made of $CHOG, and it walks nine swamps on Monad,
+            writing a note each time it conquers one. The further it goes, the brighter it glows.
+          </p>
+          <div className="hero-ctas">
+            <a className="btn" href="#/mine">
+              {address ? 'My Chogs' : 'Start with your Chog'}
+            </a>
+            <a className="btn ghost" href="#/leaderboard">
+              Leaderboard
+            </a>
+          </div>
         </div>
       </section>
 
@@ -97,7 +102,9 @@ export function Home() {
         <LazyDiorama
           state={dstate}
           selected={selected}
+          focus={picked}
           onSelect={setPicked}
+          onCenter={() => setPicked(null)}
           label={leader ? `The leading Chog, ${dstate.name}, on the nine-swamp boardwalk` : 'A demo Chog walking the nine-swamp boardwalk'}
         />
       )}

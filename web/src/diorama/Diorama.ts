@@ -20,6 +20,10 @@ const NODES: [number, number][] = [
 ];
 const LENS_SHIFT = 1.22;
 const PHI_MIN = 0.82, PHI_MAX = 1.18, TH_MAX = 0.75, RAD_MIN = 26, RAD_MAX = 78;
+/** Starting guess for the centre of the nine swamps; fitOverview() refines it for the canvas shape. */
+const OVERVIEW = new THREE.Vector3(0.5, 0, -0.5);
+/** Share of the half-screen the boardwalk fills in the centred view. */
+const FIT = 0.84;
 const LOCKED = '#6e6a58', NOW = '#8f63ff', GOLD = '#ffd23f';
 
 function rng(seed: number): () => number {
@@ -151,8 +155,12 @@ export class Diorama {
   private interactive = false;
   private visible = true;
   private raf = 0;
-  private readonly target = new THREE.Vector3(2, 0, -1);
-  private readonly focus = new THREE.Vector3(2, 0, -1);
+  private readonly target = OVERVIEW.clone();
+  private readonly focus = OVERVIEW.clone();
+  /** Centred view of the whole boardwalk, fitted to the canvas in resize(). */
+  private readonly overview = OVERVIEW.clone();
+  private overviewRadius = 60;
+  private centred = true;
   private theta = 0;
   private phi = 1.02;
   private radius = 60;
@@ -784,11 +792,17 @@ export class Diorama {
     (this.plate.lastChild as HTMLElement).textContent = next.subtitle;
   }
 
-  /** Fly the camera to a swamp and mark it selected. */
+  /** Mark a swamp as selected (highlights its tag). */
   select(index: number): void {
     this.selected = Math.min(8, Math.max(0, index));
-    this.focus.copy(this.nodes[this.selected]!).setY(0);
     this.tags.forEach((t, k) => t.classList.toggle('sel', k === this.selected));
+  }
+
+  /** Fly the camera to a swamp, or with null back to the centred view of the whole boardwalk. */
+  focusOn(index: number | null): void {
+    this.centred = index === null;
+    if (index === null) this.focus.copy(this.overview);
+    else this.focus.copy(this.nodes[Math.min(8, Math.max(0, index))]!).setY(0);
   }
 
   /** Full screen turns on drag to look around and wheel or pinch to zoom. */
@@ -797,11 +811,11 @@ export class Diorama {
     if (!on) {
       this.theta = 0;
       this.phi = 1.02;
-      this.radius = 60;
     }
     this.canvas.style.touchAction = on ? 'none' : 'pan-y';
     this.canvas.style.cursor = on ? 'grab' : 'pointer';
     this.resize();
+    this.radius = this.overviewRadius;
   }
 
   resize(): void {
@@ -811,8 +825,43 @@ export class Diorama {
     this.camera.aspect = w / h;
     this.camera.setViewOffset(w, h * LENS_SHIFT, 0, 0, w, h);
     this.camera.updateProjectionMatrix();
-    this.overlay.classList.toggle('compact', w < 620);
+    this.overlay.classList.toggle('compact', w < 760);
     this.title.scale.set(w < 620 ? 0.8 : 0.74, w < 620 ? 0.8 : 0.74, 1);
+    this.fitOverview();
+    if (this.centred) this.focus.copy(this.overview);
+    if (!this.interactive) this.radius = this.overviewRadius;
+  }
+
+  /**
+   * Finds the camera centre and distance that show all nine swamps, centred on screen, for the
+   * current canvas shape. The nearest swamps look bigger in perspective, so the plain middle of
+   * the map is not the middle of the picture; a few rounds of projecting and adjusting settle it.
+   */
+  private fitOverview(): void {
+    const cam = this.camera.clone();
+    const pad: [number, number, number][] = [[-9, 0, 0], [9, 0, 0], [0, 0, 6], [0, 3, -5]];
+    const pts = this.nodes.flatMap((n) => pad.map(([x, y, z]) => n.clone().add(new THREE.Vector3(x, y, z))));
+    const t = OVERVIEW.clone(), p = new THREE.Vector3();
+    let r = 60;
+    for (let i = 0; i < 30; i++) {
+      cam.position.set(t.x, t.y + r * Math.cos(1.02), t.z + r * Math.sin(1.02));
+      cam.lookAt(t);
+      cam.updateMatrixWorld();
+      let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+      for (const q of pts) {
+        p.copy(q).project(cam);
+        x0 = Math.min(x0, p.x); x1 = Math.max(x1, p.x);
+        y0 = Math.min(y0, p.y); y1 = Math.max(y1, p.y);
+      }
+      // Leave room for the title along the top of the picture.
+      const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2 + 0.05;
+      const ext = Math.max((x1 - x0) / 2, (y1 - y0) / 2 / 0.86);
+      t.x += cx * r * 0.35;
+      t.z -= cy * r * 0.45;
+      r = Math.max(RAD_MIN, Math.min(140, r * Math.pow(ext / FIT, 0.6)));
+    }
+    this.overview.copy(t);
+    this.overviewRadius = r;
   }
 
   destroy(): void {
@@ -911,7 +960,7 @@ export class Diorama {
     if (this.pinch && this.pointers.size === 2) {
       const [a, b] = [...this.pointers.values()];
       const d = Math.hypot(a!.x - b!.x, a!.y - b!.y);
-      this.radius = Math.max(RAD_MIN, Math.min(RAD_MAX, (this.pinch.r * this.pinch.d) / Math.max(1, d)));
+      this.radius = Math.max(RAD_MIN, Math.min(Math.max(RAD_MAX, this.overviewRadius * 1.15), (this.pinch.r * this.pinch.d) / Math.max(1, d)));
       return;
     }
     if (!this.drag) return;
@@ -939,7 +988,7 @@ export class Diorama {
   private onWheel(e: WheelEvent): void {
     if (!this.interactive) return; // inline, the wheel scrolls the page
     e.preventDefault();
-    this.radius = Math.max(RAD_MIN, Math.min(RAD_MAX, this.radius * (1 + Math.sign(e.deltaY) * 0.08)));
+    this.radius = Math.max(RAD_MIN, Math.min(Math.max(RAD_MAX, this.overviewRadius * 1.15), this.radius * (1 + Math.sign(e.deltaY) * 0.08)));
   }
 
   private project(v: THREE.Vector3): { x: number; y: number; ok: boolean } {
@@ -1011,17 +1060,24 @@ export class Diorama {
       }
     }
 
-    this.title.position.set(tg.x - 3, 8.4, tg.z - 40);
+    // Lift the title as the camera pulls back so the back trees never cover it.
+    this.title.position.set(tg.x, 8.4 + Math.max(0, r - 60) * 0.4, tg.z - 40);
     this.title.rotation.y = Math.atan2(this.camera.position.x - this.title.position.x, this.camera.position.z - this.title.position.z);
 
+    // Labels slide inwards rather than hang off the side of the picture.
+    const W = this.canvas.clientWidth;
+    const inside = (x: number, el: HTMLElement) => {
+      const half = el.offsetWidth / 2 + 6;
+      return half * 2 >= W ? W / 2 : Math.min(W - half, Math.max(half, x));
+    };
     this.nodes.forEach((n, i) => {
       const p = this.project(new THREE.Vector3(n.x, 0.7, n.z + 2.6));
       const t = this.tags[i]!;
-      t.style.transform = `translate(${p.x.toFixed(1)}px,${p.y.toFixed(1)}px) translate(-50%,6px)`;
+      t.style.transform = `translate(${inside(p.x, t).toFixed(1)}px,${p.y.toFixed(1)}px) translate(-50%,6px)`;
       t.style.visibility = p.ok ? 'visible' : 'hidden';
     });
     const pp = this.project(new THREE.Vector3(cp.x, this.chog.position.y + 4.9, cp.z));
-    this.plate.style.transform = `translate(${pp.x.toFixed(1)}px,${pp.y.toFixed(1)}px) translate(-50%,-100%)`;
+    this.plate.style.transform = `translate(${inside(pp.x, this.plate).toFixed(1)}px,${pp.y.toFixed(1)}px) translate(-50%,-100%)`;
     this.plate.style.visibility = pp.ok ? 'visible' : 'hidden';
 
     this.composer.render();

@@ -102,7 +102,9 @@ export function ChogPage({ id }: { id: bigint }) {
         <LazyDiorama
           state={dstate}
           selected={selected}
+          focus={picked}
           onSelect={setPicked}
+          onCenter={() => setPicked(null)}
           label={`${name} on the nine-swamp boardwalk, ${dstate.subtitle}`}
         />
         <div className="chips" role="group" aria-label="Choose a swamp">

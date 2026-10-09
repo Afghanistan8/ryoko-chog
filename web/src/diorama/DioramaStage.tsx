@@ -5,8 +5,13 @@ import type { DioramaState } from './state';
 
 interface Props {
   state: DioramaState;
+  /** Swamp highlighted (tag and side panel). */
   selected: number;
+  /** Swamp the camera flies to, or null for the centred view of the whole map. */
+  focus: number | null;
   onSelect: (index: number) => void;
+  /** Back to the centred view. */
+  onCenter: () => void;
   label: string;
 }
 
@@ -15,19 +20,19 @@ interface Props {
  * "Full screen" opens it over the whole screen, where dragging looks around and the wheel or a
  * pinch zooms. Uses the Fullscreen API when the browser allows it, otherwise a full-window view.
  */
-export function DioramaStage({ state, selected, onSelect, label }: Props) {
+export function DioramaStage({ state, selected, focus, onSelect, onCenter, label }: Props) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const engineRef = useRef<Diorama | null>(null);
   const onSelectRef = useRef(onSelect);
-  const latest = useRef({ state, selected });
+  const latest = useRef({ state, selected, focus });
   const [full, setFull] = useState(false);
   const [failed, setFailed] = useState<string | null>(null);
   const reduced = usePrefersReducedMotion();
 
   onSelectRef.current = onSelect;
-  latest.current = { state, selected };
+  latest.current = { state, selected, focus };
 
   useEffect(() => {
     const canvas = canvasRef.current, overlay = overlayRef.current;
@@ -45,6 +50,7 @@ export function DioramaStage({ state, selected, onSelect, label }: Props) {
     engineRef.current = engine;
     engine.setState(latest.current.state);
     engine.select(latest.current.selected);
+    engine.focusOn(latest.current.focus);
     return () => {
       engine.destroy();
       engineRef.current = null;
@@ -58,6 +64,10 @@ export function DioramaStage({ state, selected, onSelect, label }: Props) {
   useEffect(() => {
     engineRef.current?.select(selected);
   }, [selected]);
+
+  useEffect(() => {
+    engineRef.current?.focusOn(focus);
+  }, [focus]);
 
   useEffect(() => {
     engineRef.current?.setInteractive(full);
@@ -109,6 +119,11 @@ export function DioramaStage({ state, selected, onSelect, label }: Props) {
       <div ref={overlayRef} className="d-overlay" />
       {failed && <p className="d-failed">{failed}</p>}
       <div className="d-controls">
+        {focus !== null && (
+          <button type="button" className="btn ghost d-btn" onClick={onCenter}>
+            Centre map
+          </button>
+        )}
         {full ? (
           <button type="button" className="btn ghost d-btn" onClick={() => void exit()}>
             Exit full screen

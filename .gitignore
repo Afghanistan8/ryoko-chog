@@ -24,3 +24,6 @@ web/dist/
 Thumbs.db
 .vscode/
 .idea/
+
+# Forge keeps a timestamped copy of each run; run-latest.json is enough
+contracts/broadcast/**/run-[0-9]*.json

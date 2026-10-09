@@ -45,33 +45,31 @@ Rules enforced on-chain by `RyokoJourney`:
 
 ## Deployments
 
+Version 2 (one-transaction start, swamp events by tier, rushing). Deployed 9 Oct 2026 and checked on-chain: bytecode matches this source, all 1,969 tiers match the Chog Genesis metadata and are frozen, the owner is `0x4184bc5E5444F250767E8D33A49817A9B4FB0df3` and the agent and resetter is `0xa5A1694b7F7adEC5F2fC1Ff921ffac4219FED1D7`. The same addresses are in `packages/shared/src/deployments.ts`.
+
 ### Monad mainnet (chain 143)
 
-Deployed 9 Oct 2026 and checked on-chain. Uses the real Chog Genesis and $CHOG. Stays are 2 days and legs 9 days. An ant is 1,000 CHOG.
+Real Chog Genesis and $CHOG. Stays are 2 days, legs 9 days, an ant is 1,000 CHOG.
 
 | Contract | Address |
 |---|---|
-| RyokoJourney | [`0xC8E3c576c6aBC7536f7B158220e146aEE44C0725`](https://monadscan.com/address/0xC8E3c576c6aBC7536f7B158220e146aEE44C0725) |
-| RyokoAccount (implementation) | [`0x095cee07dd861375170b3Bb1EB74D580E6Ff604B`](https://monadscan.com/address/0x095cee07dd861375170b3Bb1EB74D580E6Ff604B) |
+| RyokoJourney | [`0xa726C17de787fAAAcCe9d0773B2651c8F36F0146`](https://monadscan.com/address/0xa726C17de787fAAAcCe9d0773B2651c8F36F0146) |
+| RyokoAccount (implementation) | [`0x3eccf61B0D2872fD179c2dE7bA19c64112aA3e34`](https://monadscan.com/address/0x3eccf61B0D2872fD179c2dE7bA19c64112aA3e34) |
 | Chog Genesis | [`0xc96d31F8626c6D03Fae5dCD3d61e3FB9F4a73763`](https://monadscan.com/address/0xc96d31F8626c6D03Fae5dCD3d61e3FB9F4a73763) |
 | $CHOG | [`0x350035555E10d9AfAF1566AaebfCeD5BA6C27777`](https://monadscan.com/address/0x350035555E10d9AfAF1566AaebfCeD5BA6C27777) |
-| Agent and resetter | `0x4184bc5E5444F250767E8D33A49817A9B4FB0df3` |
-
-The transaction record is in `contracts/broadcast/Deploy.s.sol/143/run-latest.json`. Mainnet and testnet share some addresses because both were deployed from the same fresh wallet; they are different contracts on different networks.
 
 ### Monad testnet (chain 10143)
 
-Deployed 9 Oct 2026 and checked on-chain. Stays are 2 minutes and legs 9 minutes, so one "day" is one minute. An ant is 1,000 test CHOG.
+Free test Chogs and test CHOG. Stays are 2 minutes and legs 9 minutes, so one "day" is one minute.
 
 | Contract | Address |
 |---|---|
-| RyokoJourney | [`0x3eccf61B0D2872fD179c2dE7bA19c64112aA3e34`](https://testnet.monadexplorer.com/address/0x3eccf61B0D2872fD179c2dE7bA19c64112aA3e34) |
-| RyokoAccount (implementation) | [`0x37f97E1585f51ceCC712087A68C3169C67391f03`](https://testnet.monadexplorer.com/address/0x37f97E1585f51ceCC712087A68C3169C67391f03) |
-| Chog Genesis (Test), free mint | [`0x095cee07dd861375170b3Bb1EB74D580E6Ff604B`](https://testnet.monadexplorer.com/address/0x095cee07dd861375170b3Bb1EB74D580E6Ff604B) |
-| Chog (Test) token, faucet | [`0xC8E3c576c6aBC7536f7B158220e146aEE44C0725`](https://testnet.monadexplorer.com/address/0xC8E3c576c6aBC7536f7B158220e146aEE44C0725) |
-| Agent and resetter | `0x4184bc5E5444F250767E8D33A49817A9B4FB0df3` |
+| RyokoJourney | [`0x4C23ef298592Ed6b61351326899752c8aDCdED1b`](https://testnet.monadexplorer.com/address/0x4C23ef298592Ed6b61351326899752c8aDCdED1b) |
+| RyokoAccount (implementation) | [`0x2e26455989e98ABed32697f7A3168A313b94F676`](https://testnet.monadexplorer.com/address/0x2e26455989e98ABed32697f7A3168A313b94F676) |
+| Chog Genesis (Test), free mint | [`0x8B128889240C7e63608A73578247D513a87f347C`](https://testnet.monadexplorer.com/address/0x8B128889240C7e63608A73578247D513a87f347C) |
+| Chog (Test) token, faucet and permit | [`0x4cf2489573a855B1c1C871f787C8a0681cd7B16A`](https://testnet.monadexplorer.com/address/0x4cf2489573a855B1c1C871f787C8a0681cd7B16A) |
 
-The transaction record is in `contracts/broadcast/Deploy.s.sol/10143/run-latest.json`.
+The transaction records are in `contracts/broadcast/Deploy.s.sol/<chain>/run-latest.json`. Version 1 (mainnet journey `0xC8E3…0725`, testnet journey `0x3ecc…3e34`) is retired.
 
 ## Repository
 

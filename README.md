@@ -32,6 +32,20 @@ Rules enforced on-chain by `RyokoJourney`:
 
 ## Deployments
 
+### Monad mainnet (chain 143)
+
+Deployed 9 Oct 2026 and checked on-chain. Uses the real Chog Genesis and $CHOG. Stays are 2 days and legs 9 days. An ant is 1,000 CHOG.
+
+| Contract | Address |
+|---|---|
+| RyokoJourney | [`0xC8E3c576c6aBC7536f7B158220e146aEE44C0725`](https://monadscan.com/address/0xC8E3c576c6aBC7536f7B158220e146aEE44C0725) |
+| RyokoAccount (implementation) | [`0x095cee07dd861375170b3Bb1EB74D580E6Ff604B`](https://monadscan.com/address/0x095cee07dd861375170b3Bb1EB74D580E6Ff604B) |
+| Chog Genesis | [`0xc96d31F8626c6D03Fae5dCD3d61e3FB9F4a73763`](https://monadscan.com/address/0xc96d31F8626c6D03Fae5dCD3d61e3FB9F4a73763) |
+| $CHOG | [`0x350035555E10d9AfAF1566AaebfCeD5BA6C27777`](https://monadscan.com/address/0x350035555E10d9AfAF1566AaebfCeD5BA6C27777) |
+| Agent and resetter | `0x4184bc5E5444F250767E8D33A49817A9B4FB0df3` |
+
+The transaction record is in `contracts/broadcast/Deploy.s.sol/143/run-latest.json`. Mainnet and testnet share some addresses because both were deployed from the same fresh wallet; they are different contracts on different networks.
+
 ### Monad testnet (chain 10143)
 
 Deployed 9 Oct 2026 and checked on-chain. Stays are 2 minutes and legs 9 minutes, so one "day" is one minute. An ant is 1,000 test CHOG.

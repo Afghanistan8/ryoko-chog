@@ -30,6 +30,22 @@ Rules enforced on-chain by `RyokoJourney`:
 - If the Chog changes hands, its journey is void everywhere at once and the new holder starts fresh.
 - Names are 3–16 letters, digits and single spaces, unique ignoring case. A name stops counting when the Chog changes hands.
 
+## Deployments
+
+### Monad testnet (chain 10143)
+
+Deployed 9 Oct 2026 and checked on-chain. Stays are 2 minutes and legs 9 minutes, so one "day" is one minute. An ant is 1,000 test CHOG.
+
+| Contract | Address |
+|---|---|
+| RyokoJourney | [`0x3eccf61B0D2872fD179c2dE7bA19c64112aA3e34`](https://testnet.monadexplorer.com/address/0x3eccf61B0D2872fD179c2dE7bA19c64112aA3e34) |
+| RyokoAccount (implementation) | [`0x37f97E1585f51ceCC712087A68C3169C67391f03`](https://testnet.monadexplorer.com/address/0x37f97E1585f51ceCC712087A68C3169C67391f03) |
+| Chog Genesis (Test), free mint | [`0x095cee07dd861375170b3Bb1EB74D580E6Ff604B`](https://testnet.monadexplorer.com/address/0x095cee07dd861375170b3Bb1EB74D580E6Ff604B) |
+| Chog (Test) token, faucet | [`0xC8E3c576c6aBC7536f7B158220e146aEE44C0725`](https://testnet.monadexplorer.com/address/0xC8E3c576c6aBC7536f7B158220e146aEE44C0725) |
+| Agent and resetter | `0x4184bc5E5444F250767E8D33A49817A9B4FB0df3` |
+
+The transaction record is in `contracts/broadcast/Deploy.s.sol/10143/run-latest.json`.
+
 ## Repository
 
 ```

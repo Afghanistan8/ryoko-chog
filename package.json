@@ -18,6 +18,7 @@
     "typecheck": "npm run typecheck --workspaces --if-present",
     "dev:web": "npm run dev -w web",
     "build:web": "npm run build -w web",
-    "agent": "npm run start -w agent"
+    "agent": "npm run start -w agent",
+    "agent:mainnet": "npm run start:mainnet -w agent"
   }
 }

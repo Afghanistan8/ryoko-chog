@@ -7,6 +7,8 @@
   "scripts": {
     "start": "tsx src/index.ts",
     "once": "tsx src/index.ts --once",
+    "start:mainnet": "tsx src/index.ts --env .env.mainnet",
+    "once:mainnet": "tsx src/index.ts --once --env .env.mainnet",
     "test": "vitest run",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },

@@ -7,7 +7,7 @@ import { Leaderboard } from '../components/Leaderboard';
 import { ChogCrowd } from '../components/ChogCrowd';
 import { LazyDiorama } from '../diorama/LazyDiorama';
 import { journeyToDiorama, type DioramaState } from '../diorama/state';
-import { chogLabel, formatDuration } from '../format';
+import { chogLabel, formatSpan } from '../format';
 
 const DEMO_STEP_MS = 9000;
 
@@ -121,7 +121,7 @@ export function Home() {
       {net.isTest && (
         <p className="testnet-banner">
           Testnet demo: Chogs and CHOG here are free test tokens, and a day lasts{' '}
-          {config.data ? formatDuration(config.data.legDuration / 9n) : 'about a minute'}.
+          {config.data ? formatSpan(config.data.legDuration / 9n) : 'about a minute'}.
         </p>
       )}
 
@@ -180,8 +180,8 @@ export function Home() {
               {config.data ? `${formatTokens(config.data.antPrice)} CHOG` : 'a set amount of CHOG'}, burned.
             </li>
             <li>
-              <span>D</span>It stays at least {config.data ? formatDuration(config.data.minStay) : '2 days'} and must
-              conquer within {config.data ? formatDuration(config.data.legDuration) : '9 days'} of setting out.
+              <span>D</span>It stays at least {config.data ? formatSpan(config.data.minStay) : '2 days'} and must
+              conquer within {config.data ? formatSpan(config.data.legDuration) : '9 days'} of setting out.
             </li>
             <li>
               <span>R</span>Miss the deadline and that swamp restarts. Earlier swamps stay conquered.

@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { usePublicClient } from 'wagmi';
 import {
   chunk,
+  DEFAULT_IPFS_GATEWAYS,
   fetchMetadata,
   ipfsToHttp,
   ryokoJourneyAbi,
@@ -99,7 +100,8 @@ export function useChainNow(): bigint | undefined {
 }
 
 export interface ChogMeta {
-  image?: string;
+  /** Image URLs to try in order: the same IPFS file through each gateway. */
+  images: string[];
   traits: Traits;
 }
 
@@ -118,7 +120,9 @@ export function useChogMeta(tokenId: bigint | undefined) {
         args: [tokenId!],
       });
       const meta = await fetchMetadata(uri);
-      return { image: meta?.image ? ipfsToHttp(meta.image) : undefined, traits: traitsOf(meta) };
+      const raw = meta?.image;
+      const images = !raw ? [] : raw.startsWith('ipfs://') ? DEFAULT_IPFS_GATEWAYS.map((g) => ipfsToHttp(raw, g)) : [raw];
+      return { images, traits: traitsOf(meta) };
     },
   });
 }

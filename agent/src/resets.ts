@@ -10,8 +10,24 @@ const MAX_RANGE = 100n;
 /** Cap catch-up work per tick (5,000 blocks is about 33 minutes at 400 ms blocks). */
 const MAX_WINDOWS_PER_TICK = 50;
 
-interface State {
+export interface WatcherState {
+  chainId: number;
+  chog: string;
   lastBlock: string;
+}
+
+/**
+ * The block to resume after, or undefined to start fresh at the latest block. A state file
+ * written for another chain or Chog contract (a testnet run, say) is ignored, and so is one
+ * ahead of the chain, rather than scanning the wrong blocks or none at all.
+ */
+export function resumeFrom(raw: unknown, chainId: number, chog: Address, latest: bigint): bigint | undefined {
+  if (!raw || typeof raw !== 'object') return undefined;
+  const s = raw as Partial<WatcherState>;
+  if (s.chainId !== chainId || typeof s.chog !== 'string' || s.chog.toLowerCase() !== chog.toLowerCase()) return undefined;
+  if (typeof s.lastBlock !== 'string' || !/^\d+$/.test(s.lastBlock)) return undefined;
+  const block = BigInt(s.lastBlock);
+  return block > latest ? undefined : block;
 }
 
 /**
@@ -21,10 +37,13 @@ interface State {
  */
 export class TransferWatcher {
   private lastBlock: bigint | undefined;
+  private saved: unknown;
+  private started = false;
   private readonly blockTime = new Map<bigint, bigint>();
 
   constructor(
     private readonly chain: AgentChain,
+    private readonly chainId: number,
     private readonly chog: Address,
     private readonly journey: Address,
     private readonly stateFile: string,
@@ -32,8 +51,7 @@ export class TransferWatcher {
   ) {
     if (existsSync(stateFile)) {
       try {
-        const s = JSON.parse(readFileSync(stateFile, 'utf8')) as State;
-        this.lastBlock = BigInt(s.lastBlock);
+        this.saved = JSON.parse(readFileSync(stateFile, 'utf8'));
       } catch (err) {
         log.warn('could not read agent state file; starting from the latest block', { error: errorMessage(err) });
       }
@@ -42,6 +60,12 @@ export class TransferWatcher {
 
   async tick(): Promise<number> {
     const latest = await this.chain.publicClient.getBlockNumber();
+    if (!this.started) {
+      this.started = true;
+      this.lastBlock = resumeFrom(this.saved, this.chainId, this.chog, latest);
+      if (this.lastBlock !== undefined) log.info('transfer watcher resuming', { fromBlock: this.lastBlock + 1n, latest });
+      else if (this.saved !== undefined) log.warn('agent state file is for another chain or contract; starting fresh', { stateFile: this.stateFile });
+    }
     if (this.lastBlock === undefined) {
       this.save(latest);
       log.info('transfer watcher starting at the latest block', { block: latest });
@@ -114,7 +138,7 @@ export class TransferWatcher {
 
   private save(block: bigint): void {
     this.lastBlock = block;
-    const state: State = { lastBlock: block.toString() };
+    const state: WatcherState = { chainId: this.chainId, chog: this.chog, lastBlock: block.toString() };
     writeFileSync(this.stateFile, JSON.stringify(state));
   }
 }

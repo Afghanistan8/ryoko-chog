@@ -15,7 +15,7 @@ import {
 import { useNetwork } from '../network';
 import { useChogMeta, type JourneyConfig } from '../hooks';
 import { TxButton } from './TxButton';
-import { formatDuration, shortAddress } from '../format';
+import { formatSpan, shortAddress } from '../format';
 
 interface Props {
   view: JourneyView;
@@ -260,7 +260,7 @@ export function HolderPanel({ view, config, now }: Props) {
               variant="ghost"
               label="Eat an ant now"
               disabled={!canTravel}
-              disabledReason={`The Chog can eat when it is between swamps, has an ant in its wallet, and has time left for the ${formatDuration(config.minStay)} stay.`}
+              disabledReason={`The Chog can eat when it is between swamps, has an ant in its wallet, and has time left for the ${formatSpan(config.minStay)} stay.`}
               send={() => execute(encodeFunctionData({ abi: ryokoJourneyAbi, functionName: 'travel' }))}
               onConfirmed={refresh}
             />

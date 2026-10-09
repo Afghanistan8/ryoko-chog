@@ -5,7 +5,12 @@ import { ChogAgent } from './agent';
 import { TransferWatcher } from './resets';
 import { errorMessage, log } from './log';
 
-if (existsSync('.env')) process.loadEnvFile('.env');
+// "--env .env.mainnet" picks another settings file, so one folder can run either network.
+const envFlag = process.argv.indexOf('--env');
+const envFile = envFlag >= 0 ? process.argv[envFlag + 1] : '.env';
+if (!envFile || envFile.startsWith('--')) throw new Error('--env needs a file name, e.g. --env .env.mainnet');
+if (existsSync(envFile)) process.loadEnvFile(envFile);
+else if (envFlag >= 0) throw new Error(`settings file not found: ${envFile}`);
 
 async function main(): Promise<void> {
   const once = process.argv.includes('--once');
@@ -26,13 +31,14 @@ async function main(): Promise<void> {
     minStaySeconds: jc.minStay,
     legSeconds: jc.legDuration,
     dryRun: cfg.dryRun,
+    stateFile: cfg.stateFile,
   });
 
   const agent = new ChogAgent(cfg, chain);
   let watcher: TransferWatcher | undefined;
   if (cfg.reportTransfers) {
     if (jc.resetter.toLowerCase() === chain.me.toLowerCase()) {
-      watcher = new TransferWatcher(chain, cfg.network.chogGenesis, cfg.network.journey, cfg.stateFile, cfg.dryRun);
+      watcher = new TransferWatcher(chain, cfg.network.chain.id, cfg.network.chogGenesis, cfg.network.journey, cfg.stateFile, cfg.dryRun);
     } else {
       log.warn('transfer reports are off: this agent is not the journey resetter', { resetter: jc.resetter });
     }

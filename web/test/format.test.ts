@@ -50,3 +50,18 @@ describe('display helpers', () => {
     expect(chogLabel('Gnarlo', 7n)).toBe('Gnarlo');
   });
 });
+
+describe('formatSpan', () => {
+  it('writes lengths of time in words, up to two units', async () => {
+    const { formatSpan } = await import('../src/format');
+    expect(formatSpan(172800)).toBe('2 days');
+    expect(formatSpan(777600)).toBe('9 days');
+    expect(formatSpan(86400 + 43200)).toBe('1 day 12 hours');
+    expect(formatSpan(86400 + 60)).toBe('1 day');
+    expect(formatSpan(60)).toBe('1 minute');
+    expect(formatSpan(3600 + 120 + 5)).toBe('1 hour 2 minutes');
+    expect(formatSpan(45)).toBe('45 seconds');
+    expect(formatSpan(0)).toBe('0 seconds');
+    expect(formatSpan(-5n)).toBe('0 seconds');
+  });
+});

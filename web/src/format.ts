@@ -17,6 +17,21 @@ export function formatDuration(totalSeconds: bigint | number): string {
   return `${s}s`;
 }
 
+/** A length of time for a sentence: "2 days", "1 day 12 hours", "1 minute". Up to two units. */
+export function formatSpan(totalSeconds: bigint | number): string {
+  let s = Math.max(0, Math.floor(Number(totalSeconds)));
+  const units: [string, number][] = [['day', 86400], ['hour', 3600], ['minute', 60], ['second', 1]];
+  const parts: string[] = [];
+  for (const [name, size] of units) {
+    const n = Math.floor(s / size);
+    s -= n * size;
+    if (n > 0) parts.push(`${n} ${name}${n === 1 ? '' : 's'}`);
+    else if (parts.length > 0) break;
+    if (parts.length === 2) break;
+  }
+  return parts.length ? parts.join(' ') : '0 seconds';
+}
+
 export function chogLabel(name: string, tokenId: bigint): string {
   return name || `Chog #${tokenId}`;
 }

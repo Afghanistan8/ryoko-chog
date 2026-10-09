@@ -14,9 +14,11 @@ web/dist/
 .env
 .env.*
 !.env.example
+# Public mainnet addresses for the production web build
+!web/.env.production
 
 # Agent runtime state
-.agent-state.json
+.agent-state*.json
 *.log
 
 # OS and editors

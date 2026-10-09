@@ -52,7 +52,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AgentConfig {
     pollSeconds: positiveInt(env.POLL_SECONDS, 30, 'POLL_SECONDS'),
     dryRun: bool(env.DRY_RUN, false),
     reportTransfers: bool(env.REPORT_TRANSFERS, true),
-    stateFile: env.STATE_FILE || '.agent-state.json',
+    // One state file per network, so testnet and mainnet runs never share a block position.
+    stateFile: env.STATE_FILE || `.agent-state.${network.name}.json`,
     ipfsGateways: gateways,
     lowGasWei: BigInt(positiveInt(env.LOW_GAS_MILLI_MON, 500, 'LOW_GAS_MILLI_MON')) * 10n ** 15n,
   };

@@ -156,11 +156,19 @@ Copy `agent/.env.example` to `agent/.env` and fill in the addresses and a fresh 
 npm run agent
 ```
 
+To run on mainnet as well, put the mainnet settings in `agent/.env.mainnet` (`NETWORK=mainnet`, `JOURNEY_ADDRESS`, `AGENT_PRIVATE_KEY`) and start it with:
+
+```bash
+npm run agent:mainnet
+```
+
+Each network keeps its own `.agent-state.<network>.json`, and a state file written for another chain is ignored, so testnet and mainnet runs never mix.
+
 It reads every Chog's journey each round. For Chogs that appointed it, it eats an ant when the Chog is fed and in time, and conquers once the stay is over. If it is the resetter, it also reports Chogs sent away and back. Use `DRY_RUN=true` to simulate without sending.
 
 ## Run the site
 
-Copy `web/.env.example` to `web/.env.local` and fill in the addresses and the agent's address.
+`npm run dev:web` uses `web/.env.local` (copy it from `web/.env.example`; testnet here). `npm run build:web` uses the committed `web/.env.production`, which points at the mainnet deployment.
 
 ```bash
 npm run dev:web
@@ -169,6 +177,10 @@ npm run dev:web
 ```bash
 npm run build:web
 ```
+
+### Vercel
+
+`vercel.json` holds the build settings: install with `npm ci` at the repository root, build the `web` workspace and serve `web/dist`. Import the repository with the Root Directory left as the repository root. No environment variables are needed for mainnet. Setting `VITE_NETWORK`, `VITE_JOURNEY_ADDRESS`, `VITE_AGENT_ADDRESS` or `VITE_RPC_URL` in Vercel overrides `web/.env.production`.
 
 The site works with any injected browser wallet (MetaMask, Rabby and others) and offers to switch to Monad.
 

@@ -1,13 +1,31 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useAccount } from 'wagmi';
-import { displaySwamp, formatTokens, Status, SWAMPS } from '@ryoko/shared';
+import { compareForLeaderboard, displaySwamp, formatTokens, glowLevel, Status, SWAMPS } from '@ryoko/shared';
 import { useAllJourneys, useJourneyConfig, usePrefersReducedMotion } from '../hooks';
 import { useNetwork } from '../network';
-import { SwampCanvas } from '../components/SwampCanvas';
 import { Leaderboard } from '../components/Leaderboard';
-import { formatDuration } from '../format';
+import { LazyDiorama } from '../diorama/LazyDiorama';
+import { journeyToDiorama, type DioramaState } from '../diorama/state';
+import { chogLabel, formatDuration } from '../format';
 
 const DEMO_STEP_MS = 9000;
+
+function demoState(step: number): DioramaState {
+  const conquered = step % 10;
+  const complete = conquered === 9;
+  return {
+    conquered,
+    target: Math.min(8, conquered),
+    chogAt: Math.min(8, conquered),
+    complete,
+    glow: complete ? 9 : conquered + 1,
+    started: true,
+    ants: step,
+    antsComing: false,
+    name: 'Demo Chog',
+    subtitle: complete ? 'Gold · journey complete' : `Swamp ${conquered + 1} of 9`,
+  };
+}
 
 export function Home() {
   const net = useNetwork();
@@ -15,13 +33,8 @@ export function Home() {
   const journeys = useAllJourneys();
   const config = useJourneyConfig();
   const reduced = usePrefersReducedMotion();
-  const [demo, setDemo] = useState({ swamp: 1, eat: 0 });
-
-  useEffect(() => {
-    if (reduced) return;
-    const id = setInterval(() => setDemo((d) => ({ swamp: (d.swamp % 9) + 1, eat: d.eat + 1 })), DEMO_STEP_MS);
-    return () => clearInterval(id);
-  }, [reduced]);
+  const [step, setStep] = useState(4);
+  const [picked, setPicked] = useState<number | null>(null);
 
   const stats = useMemo(() => {
     const all = journeys.data ?? [];
@@ -36,43 +49,67 @@ export function Home() {
       ants: active.reduce((n, j) => n + j.ants, 0),
       burned: active.reduce((n, j) => n + j.burned, 0n),
       perSwamp,
+      leader: [...active].sort(compareForLeaderboard)[0],
     };
   }, [journeys.data]);
 
-  const demoSwamp = SWAMPS[demo.swamp - 1]!;
+  const leader = stats.leader;
+  useEffect(() => {
+    if (reduced || leader) return;
+    const id = setInterval(() => setStep((s) => s + 1), DEMO_STEP_MS);
+    return () => clearInterval(id);
+  }, [reduced, leader]);
+
+  const leaderKey = leader ? [leader.tokenId, leader.status, leader.conquered, leader.currentSwamp, leader.ants, leader.name].join('|') : '';
+  const dstate = useMemo(() => {
+    if (!leader) return demoState(step);
+    const g = glowLevel(leader);
+    return journeyToDiorama(leader, { name: chogLabel(leader.name, leader.tokenId), glowName: g ? SWAMPS[g - 1]!.glowName : '', antsInWallet: 0 });
+    // leaderKey covers every field used.
+  }, [leaderKey, step]);
+  const selected = picked ?? dstate.target;
 
   return (
     <div className="home">
-      <SwampCanvas
-        swamp={demo.swamp}
-        glow={demo.swamp}
-        complete={demo.swamp === 9}
-        ants={demo.eat}
-        antLabel={config.data ? `${formatTokens(config.data.antPrice)} CHOG` : ''}
-        label={`A Chog travelling through ${demoSwamp.name}`}
-      >
-        <div className="hero-copy">
-          <h1 className="display hero-title">
-            Ryoko <span>Chog</span>
-          </h1>
-          <p className="hero-sub">
-            Your Chog gets its own wallet and an agent. Feed it ants made of $CHOG, and it walks nine swamps on
-            Monad, writing a note each time it conquers one. The further it goes, the brighter it glows.
-          </p>
-          <div className="row wrap">
-            <a className="btn" href="#/mine">
-              {address ? 'My Chogs' : 'Start with your Chog'}
-            </a>
-            <a className="btn ghost" href="#/leaderboard">
-              Leaderboard
-            </a>
-          </div>
+      <section className="hero" aria-labelledby="hero-h">
+        <h1 id="hero-h" className="display hero-title">
+          Ryoko <span>Chog</span>
+        </h1>
+        <p className="hero-sub">
+          Your Chog gets its own wallet and an agent. Feed it ants made of $CHOG, and it walks nine swamps on Monad,
+          writing a note each time it conquers one. The further it goes, the brighter it glows.
+        </p>
+        <div className="row wrap">
+          <a className="btn" href="#/mine">
+            {address ? 'My Chogs' : 'Start with your Chog'}
+          </a>
+          <a className="btn ghost" href="#/leaderboard">
+            Leaderboard
+          </a>
         </div>
-        <div className="hud hud-br">
-          <div className="eyebrow">Demo · swamp {demo.swamp} of 9</div>
-          <div className="sname small-name">{demoSwamp.name}</div>
+      </section>
+
+      {journeys.isLoading ? (
+        <div className="d-stage" role="img" aria-label="Loading the swamp">
+          <p className="d-failed">Wading into the swamp…</p>
         </div>
-      </SwampCanvas>
+      ) : (
+        <LazyDiorama
+          state={dstate}
+          selected={selected}
+          onSelect={setPicked}
+          label={leader ? `The leading Chog, ${dstate.name}, on the nine-swamp boardwalk` : 'A demo Chog walking the nine-swamp boardwalk'}
+        />
+      )}
+      <p className="small muted stage-caption">
+        {leader ? (
+          <>
+            Showing the leading Chog, <b>{dstate.name}</b>. <a href={`#/chog/${leader.tokenId}`}>Open its journey</a>
+          </>
+        ) : (
+          'Demo journey. No Chog has set off on this network yet.'
+        )}
+      </p>
 
       {net.isTest && (
         <p className="testnet-banner">

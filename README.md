@@ -13,7 +13,7 @@ Built for Chogathon 2026.
 1. **Get $CHOG.** Your Chog eats ants, and one ant is 1,000 $CHOG. On testnet it's free: open your Chog and press **Get 20,000 test $CHOG**. On mainnet, have $CHOG in your wallet first: 9,000 covers the whole trip.
 2. **Set off once.** Open your Chog (under **My Chogs**), give it a name, choose how many ants to pack (9 covers every swamp), keep **Let the agent walk it for me** ticked, and press **Set off**. Your wallet asks for one free signature and one transaction. That's all you have to do.
 3. **The agent walks it for you.** It feeds your Chog one ant to enter a swamp. The Chog rests there for 2 days (2 minutes on testnet), then the agent conquers the swamp and writes a short note, and they move on to the next one. You never have to press "conquer" yourself.
-4. **Keep it fed.** Nine swamps need at least nine ants. If its pouch runs empty, it waits, hungry, until you press **Add ants**.
+4. **Keep it fed.** Nine swamps need at least nine ants. If its pouch runs empty, it waits, hungry, until you press **Add ants**. Want your $CHOG back? **More options → Take ants back** moves it from the pouch to your wallet any time.
 
 **Good to know**
 
@@ -63,7 +63,7 @@ Rules enforced on-chain by `RyokoJourney`:
 
 ## Deployments
 
-Version 2 (one-transaction start, swamp events by tier, rushing). Deployed 9 Oct 2026 and checked on-chain: bytecode matches this source, all 1,969 tiers match the Chog Genesis metadata and are frozen, the owner is `0x4184bc5E5444F250767E8D33A49817A9B4FB0df3` and the agent and resetter is `0xa5A1694b7F7adEC5F2fC1Ff921ffac4219FED1D7`. The same addresses are in `packages/shared/src/deployments.ts`.
+Version 2 (one-transaction start, swamp events by tier, rushing). All six contracts are source-verified on [Sourcify](https://sourcify.dev) as exact matches, so anyone can read the deployed code. Deployed 9 Oct 2026 and checked on-chain: bytecode matches this source, all 1,969 tiers match the Chog Genesis metadata and are frozen, the owner is `0x4184bc5E5444F250767E8D33A49817A9B4FB0df3` and the agent and resetter is `0xa5A1694b7F7adEC5F2fC1Ff921ffac4219FED1D7`. The same addresses are in `packages/shared/src/deployments.ts`.
 
 ### Monad mainnet (chain 143)
 
@@ -119,6 +119,7 @@ Checked against live Monad RPCs during development:
 
 ## Trust model
 
+- **What a holder signs:** one EIP-2612 permit for exactly the $CHOG they choose, spender the journey contract, valid for one hour and used up in the same transaction; then one transaction. No NFT approval is ever requested and the Chog never leaves the holder's wallet. The most at stake is what sits in the Chog's ant pouch, and the holder can take that back any time (**Take ants back**).
 - **The agent can only call the journey contract.** `RyokoAccount.execute` lets the appointed agent call `journey` with zero value and nothing else, so it cannot move the Chog's tokens or NFTs. Its appointment stops working the moment the Chog changes hands.
 - **The journey contract never holds funds.** It pulls exactly one ant per `travel` (two per `rush`) from the Chog's account and sends it to the burn address. In `begin` it moves the holder's $CHOG straight into the Chog's account, using exactly the permit the holder signed.
 - **The agent never rushes.** Rushing burns two of the holder's ants, so it is only ever done by the holder. The Ryoko agent only feeds one ant per swamp and conquers.

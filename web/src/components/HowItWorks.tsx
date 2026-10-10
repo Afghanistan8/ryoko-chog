@@ -37,7 +37,8 @@ export function HowItWorks({ config, open }: { config: JourneyConfig; open: bool
         </li>
         <li>
           <b>Keep it fed.</b> Nine swamps need at least nine ants. If its pouch runs empty, it waits, hungry, until you add more
-          with <i>Add ants</i>.
+          with <i>Add ants</i>. Ants it hasn't eaten stay yours: <i>More options → Take ants back</i> returns them to your wallet any
+          time.
         </li>
       </ol>
       <div className="how-extra small">

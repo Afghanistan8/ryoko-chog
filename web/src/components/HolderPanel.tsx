@@ -241,6 +241,7 @@ function Travelling({ view, config, now }: { view: JourneyView; config: JourneyC
   const { writeContractAsync } = useWriteContract();
   const meta = useChogMeta(view.tokenId);
   const [antsTyped, setAnts] = useState<number | null>(null);
+  const [backTyped, setBack] = useState<number | null>(null);
   const [name, setName] = useState(view.name);
 
   const reads = useReadContracts({
@@ -262,14 +263,18 @@ function Travelling({ view, config, now }: { view: JourneyView; config: JourneyC
   // Suggest exactly what the rest of the trip needs: one ant per swamp left, minus ants it already has.
   const antsNeeded = Math.max(1, 9 - view.conquered - Number(antsInWallet));
   const ants = antsTyped ?? antsNeeded;
+  // Taking back every ant sends the whole pouch, including any $CHOG that isn't a full ant.
+  const takeBack = Math.min(backTyped ?? Number(antsInWallet), Math.max(1, Number(antsInWallet)));
+  const takeAll = takeBack >= Number(antsInWallet);
+  const takeAmount = takeAll ? accountChog : config.antPrice * BigInt(takeBack);
   const feedAmount = config.antPrice * BigInt(ants);
   const problem = name === view.name ? null : nameProblem(name);
   const rushPrice = config.antPrice * BigInt(RUSH_ANTS);
   const next = view.conquered + 1;
   const left = (t: bigint) => (now !== undefined && t > now ? t - now : 0n);
 
-  const execute = (data: `0x${string}`) =>
-    writeContractAsync({ address: view.account, abi: ryokoAccountAbi, functionName: 'execute', args: [net.journey, 0n, data, 0] });
+  const execute = (data: `0x${string}`, target: `0x${string}` = net.journey) =>
+    writeContractAsync({ address: view.account, abi: ryokoAccountAbi, functionName: 'execute', args: [target, 0n, data, 0] });
   const travel = () => execute(encodeFunctionData({ abi: ryokoJourneyAbi, functionName: 'travel' }));
   const conquer = () =>
     execute(
@@ -437,6 +442,44 @@ function Travelling({ view, config, now }: { view: JourneyView; config: JourneyC
                 }
                 onConfirmed={refresh}
               />
+            </div>
+          )}
+
+          {accountChog > 0n && address && (
+            <div>
+              <h4>Take ants back</h4>
+              <p className="small tight">
+                Moves $CHOG from its pouch back to your wallet. Only you can do this.
+                {!finished && ' With no ants left it waits, hungry, until you add more.'}
+              </p>
+              <div className="row">
+                <input
+                  aria-label="Ants to take back"
+                  type="number"
+                  min={1}
+                  max={Math.max(1, Number(antsInWallet))}
+                  value={takeBack}
+                  onChange={(e) => setBack(Math.min(Math.max(1, Number(antsInWallet)), Math.max(1, Math.trunc(Number(e.target.value) || 1))))}
+                  className="num-input"
+                />
+                <TxButton
+                  variant="ghost"
+                  label={takeAll ? 'Take all back' : `Take ${takeBack} back`}
+                  send={() =>
+                    execute(
+                      encodeFunctionData({ abi: erc20Abi, functionName: 'transfer', args: [address, takeAmount] }),
+                      net.chogToken,
+                    )
+                  }
+                  onConfirmed={() => {
+                    setBack(null);
+                    refresh();
+                  }}
+                />
+              </div>
+              <p className="small muted tight">
+                {takeAll ? `All ${formatTokens(accountChog)} $CHOG in its pouch.` : `${formatTokens(takeAmount)} $CHOG.`}
+              </p>
             </div>
           )}
 

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { encodeFunctionData, erc20Abi, maxUint256, parseAbi, parseSignature, zeroAddress, domainSeparator, type Hash } from 'viem';
 import { useAccount, usePublicClient, useReadContracts, useSignTypedData, useWriteContract } from 'wagmi';
 import { useQueryClient } from '@tanstack/react-query';
@@ -41,9 +41,8 @@ export function HolderPanel({ view, config, now }: Props) {
     <section className="panel holder" aria-labelledby="holder-h">
       <div className="step-label">You hold this Chog</div>
       <h2 id="holder-h" className="display">
-        {active ? 'Look after it' : 'Send it on its way'}
+        {active ? 'Its journey' : 'Send it on its way'}
       </h2>
-      <p className="small warn-text">Selling or moving this Chog resets its journey to swamp 1 and clears its name.</p>
       {active ? <Travelling view={view} config={config} now={now} /> : <SetOff view={view} config={config} />}
     </section>
   );
@@ -68,7 +67,8 @@ function SetOff({ view, config }: { view: JourneyView; config: JourneyConfig }) 
   const { writeContractAsync } = useWriteContract();
   const { signTypedDataAsync } = useSignTypedData();
   const [name, setName] = useState(view.name);
-  const [ants, setAnts] = useState(3);
+  // Nine ants cover every swamp, so the Chog never stops hungry halfway.
+  const [ants, setAnts] = useState(9);
   const [useAgent, setUseAgent] = useState(Boolean(net.agent));
   const [stage, setStage] = useState<string | null>(null);
 
@@ -156,7 +156,7 @@ function SetOff({ view, config }: { view: JourneyView; config: JourneyConfig }) 
     <div className="setoff">
       <div className="field">
         <label htmlFor="chog-name">
-          <b>Name</b> <span className="small muted">3 to 16 letters or numbers, unique across all Chogs</span>
+          <b>1. Name it</b> <span className="small muted">3 to 16 letters or numbers</span>
         </label>
         <input
           id="chog-name"
@@ -173,7 +173,7 @@ function SetOff({ view, config }: { view: JourneyView; config: JourneyConfig }) 
 
       <div className="field">
         <label htmlFor="ant-count">
-          <b>Ants to pack</b> <span className="small muted">one per swamp, {formatTokens(config.antPrice)} CHOG each, burned</span>
+          <b>2. Pack ants</b> <span className="small muted">one per swamp, {formatTokens(config.antPrice)} CHOG each</span>
         </label>
         <div className="row">
           <input
@@ -189,9 +189,7 @@ function SetOff({ view, config }: { view: JourneyView; config: JourneyConfig }) 
             = <b className="num">{formatTokens(cost)}</b> CHOG · you hold <b className="num">{formatTokens(walletChog)}</b>
           </span>
         </div>
-        <p className="small muted tight">
-          They go into the Chog's own wallet. You can add more later, and anything left stays with the Chog.
-        </p>
+        <p className="small muted tight">9 covers every swamp. They go into your Chog's own wallet, and you can add more any time.</p>
         {net.isTest && (
           <TxButton
             variant="ghost"
@@ -206,12 +204,10 @@ function SetOff({ view, config }: { view: JourneyView; config: JourneyConfig }) 
         <label className="agent-choice">
           <input type="checkbox" checked={useAgent} onChange={(e) => setUseAgent(e.target.checked)} />
           <span>
-            <b>Let the Ryoko agent walk it for me</b>
+            <b>3. Let the agent walk it for me (recommended)</b>
             <span className="small">
-              The agent feeds your Chog an ant when it is between swamps, waits out each stay, and conquers the swamp
-              with a field note, so you don't have to come back every day. It can only use the journey contract: it
-              can never move your Chog, its CHOG or anything else, and it stops the moment the Chog changes hands.
-              You can remove it any time.
+              It feeds your Chog, waits out each rest and conquers each swamp, so you don't have to come back every day.
+              It can only play the journey, never move your Chog or tokens. You can turn it off any time.
             </span>
           </span>
         </label>
@@ -237,14 +233,14 @@ function SetOff({ view, config }: { view: JourneyView; config: JourneyConfig }) 
   );
 }
 
-/** During the journey: feed, rush, agent, rename, and travel by hand. */
+/** During the journey: one clear "what happens now", the ant pouch, and the rest folded away. */
 function Travelling({ view, config, now }: { view: JourneyView; config: JourneyConfig; now: bigint | undefined }) {
   const net = useNetwork();
   const { address } = useAccount();
   const refresh = useRefresh();
   const { writeContractAsync } = useWriteContract();
   const meta = useChogMeta(view.tokenId);
-  const [ants, setAnts] = useState(3);
+  const [antsTyped, setAnts] = useState<number | null>(null);
   const [name, setName] = useState(view.name);
 
   const reads = useReadContracts({
@@ -259,71 +255,137 @@ function Travelling({ view, config, now }: { view: JourneyView; config: JourneyC
   });
   const [walletChog, accountChog, allowance, nameFree] = reads.data ?? [0n, 0n, 0n, false];
 
+  const chogName = view.name || `Chog #${view.tokenId}`;
   const finished = view.status === Status.Complete;
   const agentOn = net.agent !== undefined && view.agent.toLowerCase() === net.agent.toLowerCase();
   const antsInWallet = config.antPrice > 0n ? accountChog / config.antPrice : 0n;
+  // Suggest exactly what the rest of the trip needs: one ant per swamp left, minus ants it already has.
+  const antsNeeded = Math.max(1, 9 - view.conquered - Number(antsInWallet));
+  const ants = antsTyped ?? antsNeeded;
   const feedAmount = config.antPrice * BigInt(ants);
   const problem = name === view.name ? null : nameProblem(name);
   const rushPrice = config.antPrice * BigInt(RUSH_ANTS);
+  const next = view.conquered + 1;
+  const left = (t: bigint) => (now !== undefined && t > now ? t - now : 0n);
 
   const execute = (data: `0x${string}`) =>
     writeContractAsync({ address: view.account, abi: ryokoAccountAbi, functionName: 'execute', args: [net.journey, 0n, data, 0] });
+  const travel = () => execute(encodeFunctionData({ abi: ryokoJourneyAbi, functionName: 'travel' }));
+  const conquer = () =>
+    execute(
+      encodeFunctionData({
+        abi: ryokoJourneyAbi,
+        functionName: 'conquer',
+        args: [
+          writeNote({
+            swamp: view.currentSwamp,
+            tokenId: view.tokenId,
+            journeyId: view.journeyId,
+            restarts: view.restarts,
+            traits: meta.data?.traits,
+            event: view.swampEvent as SwampEventValue,
+            rushed: view.rushed,
+          }),
+        ],
+      }),
+    );
 
-  const canTravel =
-    (view.status === Status.Travelling || view.status === Status.Expired) &&
-    accountChog >= config.antPrice &&
-    allowance >= config.antPrice &&
-    (view.status === Status.Expired || (now !== undefined && now + maxStay(config.minStay) <= view.deadline));
+  const fed = accountChog >= config.antPrice && allowance >= config.antPrice;
+  const fits = now !== undefined && now + maxStay(config.minStay) <= view.deadline;
+  const canTravel = (view.status === Status.Travelling || view.status === Status.Expired) && fed && (view.status === Status.Expired || fits);
 
-  const inSwamp = view.status === Status.InSwamp;
   // Same rule as RyokoJourney.rush: half the minimum stay off, but never earlier than now.
   const cut = rushCut(config.minStay);
   const rushedReady = now === undefined ? view.readyAt : view.readyAt - cut > now ? view.readyAt - cut : now;
 
+  // What is happening, in one or two plain sentences, and at most one thing to press.
+  let title: string;
+  let text: string;
+  let action: ReactNode = null;
+  switch (view.status) {
+    case Status.Travelling:
+      if (!fed) {
+        title = 'Hungry';
+        text = `${chogName} needs an ant to walk into swamp ${next}. Add ants below.`;
+      } else if (!fits) {
+        title = 'Waiting for a fresh start';
+        text = `It's too late to fit a stay in before this swamp's deadline. In ${formatDuration(left(view.deadline))} the swamp starts over and ${agentOn ? 'the agent sends it in again' : 'you can send it in again'}.`;
+      } else if (agentOn) {
+        title = 'On its way';
+        text = `The agent feeds it an ant and walks it into swamp ${next} within a minute. Nothing for you to do.`;
+      } else {
+        title = 'Ready to walk on';
+        text = `Press the button to feed it an ant and walk into swamp ${next}.`;
+        action = <TxButton label="Eat an ant and go" send={travel} onConfirmed={refresh} />;
+      }
+      break;
+    case Status.InSwamp:
+      title = `Resting in swamp ${view.currentSwamp}`;
+      text = `It finishes resting in ${formatDuration(left(view.readyAt))}. Then ${agentOn ? 'the agent conquers the swamp for you' : 'you can conquer it'}.`;
+      if (!view.rushed) {
+        action = (
+          <div className="rush">
+            <p className="small tight">
+              Want it sooner? <b>Rush</b>: eat {RUSH_ANTS} more ants and it's done in {formatDuration(left(rushedReady))}.
+            </p>
+            <TxButton
+              variant="ghost"
+              label={`Rush for ${RUSH_ANTS} ants`}
+              disabled={accountChog < rushPrice || allowance < rushPrice}
+              disabledReason={`Rushing needs ${RUSH_ANTS} ants in its wallet. Add ants below first.`}
+              send={() => execute(encodeFunctionData({ abi: ryokoJourneyAbi, functionName: 'rush' }))}
+              onConfirmed={refresh}
+            />
+          </div>
+        );
+      } else {
+        text += ' It rushed this swamp.';
+      }
+      break;
+    case Status.Ready:
+      if (agentOn) {
+        title = 'Conquering now';
+        text = 'Its rest is over. The agent conquers this swamp and writes its note within a minute.';
+      } else {
+        title = 'Ready to conquer';
+        text = `Its rest is over. Conquer the swamp within ${formatDuration(left(view.deadline))}.`;
+        action = <TxButton label="Conquer this swamp" send={conquer} onConfirmed={refresh} />;
+      }
+      break;
+    case Status.Expired:
+      title = 'This swamp starts over';
+      // Entered this leg but didn't finish in time, or never got in (usually because it was hungry).
+      text = `${
+        view.enteredAt >= view.legStartedAt && view.enteredAt > 0n
+          ? `Time ran out before it conquered swamp ${next}, so that swamp starts over.`
+          : `Time ran out before it got into swamp ${next}, so that swamp starts over.`
+      } Earlier swamps stay done. ${!fed ? 'Add ants so it can go in.' : agentOn ? 'The agent sends it in within a minute.' : ''}`;
+      if (fed && !agentOn) action = <TxButton label="Eat an ant and try again" send={travel} onConfirmed={refresh} />;
+      break;
+    default:
+      title = 'Journey complete';
+      text = `${chogName} conquered all nine swamps and glows gold. Share it from the record on the right.`;
+  }
+
   return (
-    <ol className="steps">
-      {inSwamp && (
-        <li className={view.rushed ? 'done' : ''}>
-          <h3>Rush this swamp</h3>
-          {view.rushed ? (
-            <p className="small">Rushed. It ate two extra ants and cut {formatSpan(cut)} off this stay.</p>
-          ) : (
-            <>
-              <p className="small">
-                Eat {RUSH_ANTS} extra ants ({formatTokens(rushPrice)} CHOG, burned) to cut {formatSpan(cut)} off
-                this stay. Once per swamp.
-              </p>
-              {now !== undefined && (
-                <p className="small">
-                  Ready in <b className="num">{formatDuration(view.readyAt > now ? view.readyAt - now : 0n)}</b> now, or in{' '}
-                  <b className="num">{formatDuration(rushedReady > now ? rushedReady - now : 0n)}</b> if it rushes.
-                </p>
-              )}
-              <TxButton
-                label={`Rush for ${RUSH_ANTS} ants`}
-                disabled={accountChog < rushPrice || allowance < rushPrice}
-                disabledReason={`The Chog's wallet needs ${formatTokens(rushPrice)} CHOG. Add ants below first.`}
-                send={() => execute(encodeFunctionData({ abi: ryokoJourneyAbi, functionName: 'rush' }))}
-                onConfirmed={refresh}
-              />
-            </>
-          )}
-        </li>
-      )}
+    <div className="journey-now">
+      <div className="now-box">
+        <div className="step-label">What happens now</div>
+        <h3>{title}</h3>
+        <p className="small tight">{text}</p>
+        {action}
+      </div>
 
       {!finished && (
-        <li className={antsInWallet > 0n ? 'done' : ''}>
-          <h3>Feed it ants</h3>
-          <p className="small">
-            The Chog's wallet holds <b className="num">{formatTokens(accountChog)}</b> CHOG ({antsInWallet.toString()} ants). Yours
-            holds <b className="num">{formatTokens(walletChog)}</b>.
+        <div className="ants-box">
+          <p className="small tight">
+            <b>Ants in its wallet: {antsInWallet.toString()}</b>
+            {antsInWallet > 0n ? ` (enough for ${antsInWallet.toString()} more swamp${antsInWallet === 1n ? '' : 's'})` : ''}. You
+            hold {formatTokens(walletChog)} CHOG.
           </p>
           <div className="row">
-            <label htmlFor="ant-count" className="small">
-              Ants
-            </label>
             <input
-              id="ant-count"
+              aria-label="Ants to add"
               type="number"
               min={1}
               max={27}
@@ -332,16 +394,15 @@ function Travelling({ view, config, now }: { view: JourneyView; config: JourneyC
               className="num-input"
             />
             <TxButton
-              label={`Send ${formatTokens(feedAmount)} CHOG`}
+              variant="ghost"
+              label={`Add ${ants} ant${ants === 1 ? '' : 's'}`}
               disabled={walletChog < feedAmount}
-              disabledReason={`Your wallet needs ${formatTokens(feedAmount)} CHOG.`}
-              send={() =>
-                writeContractAsync({ address: net.chogToken, abi: erc20Abi, functionName: 'transfer', args: [view.account, feedAmount] })
-              }
+              disabledReason={`That needs ${formatTokens(feedAmount)} CHOG in your wallet.${net.isTest ? ' Get free test CHOG first.' : ''}`}
+              send={() => writeContractAsync({ address: net.chogToken, abi: erc20Abi, functionName: 'transfer', args: [view.account, feedAmount] })}
               onConfirmed={refresh}
             />
           </div>
-          {net.isTest && (
+          {net.isTest && walletChog < feedAmount && (
             <TxButton
               variant="ghost"
               label="Get 20,000 test CHOG"
@@ -349,110 +410,80 @@ function Travelling({ view, config, now }: { view: JourneyView; config: JourneyC
               onConfirmed={refresh}
             />
           )}
-        </li>
+        </div>
       )}
 
-      {!finished && net.agent && (
-        <li className={agentOn ? 'done' : ''}>
-          <h3>The agent</h3>
-          {agentOn ? (
-            <>
-              <p className="small">
-                The agent <code>{shortAddress(net.agent)}</code> walks this Chog: it feeds it, waits out each stay and
-                conquers. It can only use the journey contract, never move your Chog or its CHOG elsewhere.
+      <details className="more">
+        <summary>More options</summary>
+        <div className="more-body">
+          {!finished && net.agent && (
+            <div>
+              <h4>The agent: {agentOn ? 'on' : 'off'}</h4>
+              <p className="small tight">
+                {agentOn
+                  ? 'It feeds and moves your Chog for you. It can only play the journey, never move your Chog or tokens.'
+                  : 'Turn it on and your Chog keeps moving while you are away.'}
               </p>
               <TxButton
                 variant="ghost"
-                label="Remove the agent"
+                label={agentOn ? 'Turn the agent off' : 'Turn the agent on'}
                 send={() =>
-                  writeContractAsync({ address: view.account, abi: ryokoAccountAbi, functionName: 'authorize', args: [zeroAddress, net.chogToken, maxUint256] })
+                  writeContractAsync({
+                    address: view.account,
+                    abi: ryokoAccountAbi,
+                    functionName: 'authorize',
+                    args: [agentOn ? zeroAddress : net.agent!, net.chogToken, maxUint256],
+                  })
                 }
                 onConfirmed={refresh}
               />
-            </>
-          ) : (
-            <>
-              <p className="small">
-                No agent: you travel by hand below. Appoint it so your Chog keeps moving while you are away. It can only
-                use the journey contract.
-              </p>
-              <TxButton
-                label="Appoint the agent"
-                send={() =>
-                  writeContractAsync({ address: view.account, abi: ryokoAccountAbi, functionName: 'authorize', args: [net.agent!, net.chogToken, maxUint256] })
-                }
-                onConfirmed={refresh}
-              />
-            </>
+            </div>
           )}
-        </li>
-      )}
 
-      <li className="done">
-        <h3>Rename</h3>
-        <div className="row">
-          <input
-            aria-label="Chog name"
-            type="text"
-            maxLength={16}
-            value={name}
-            autoComplete="off"
-            onChange={(e) => setName(e.target.value)}
-          />
-          <TxButton
-            variant="ghost"
-            label="Rename"
-            disabled={Boolean(problem) || name === view.name || !nameFree}
-            disabledReason={problem ?? (name === view.name ? 'That is already its name.' : 'That name is taken. Try another.')}
-            send={() => writeContractAsync({ address: net.journey, abi: ryokoJourneyAbi, functionName: 'setName', args: [view.tokenId, name] })}
-            onConfirmed={refresh}
-          />
-        </div>
-        {problem && <p className="err">{problem}</p>}
-      </li>
-
-      {!finished && (
-        <li className="manual">
-          <h3>Or travel by hand</h3>
-          <p className="small">Useful if the agent is offline. These run through the Chog's own wallet.</p>
-          <div className="row wrap">
-            <TxButton
-              variant="ghost"
-              label="Eat an ant now"
-              disabled={!canTravel}
-              disabledReason={`The Chog can eat when it is between swamps, has an ant in its wallet, and has time left for the longest stay (${formatSpan(maxStay(config.minStay))}).`}
-              send={() => execute(encodeFunctionData({ abi: ryokoJourneyAbi, functionName: 'travel' }))}
-              onConfirmed={refresh}
-            />
-            <TxButton
-              variant="ghost"
-              label="Conquer this swamp"
-              disabled={view.status !== Status.Ready}
-              disabledReason="The Chog can conquer once its stay is over."
-              send={() =>
-                execute(
-                  encodeFunctionData({
-                    abi: ryokoJourneyAbi,
-                    functionName: 'conquer',
-                    args: [
-                      writeNote({
-                        swamp: view.currentSwamp,
-                        tokenId: view.tokenId,
-                        journeyId: view.journeyId,
-                        restarts: view.restarts,
-                        traits: meta.data?.traits,
-                        event: view.swampEvent as SwampEventValue,
-                        rushed: view.rushed,
-                      }),
-                    ],
-                  }),
-                )
-              }
-              onConfirmed={refresh}
-            />
+          <div>
+            <h4>Rename</h4>
+            <div className="row">
+              <input aria-label="Chog name" type="text" maxLength={16} value={name} autoComplete="off" onChange={(e) => setName(e.target.value)} />
+              <TxButton
+                variant="ghost"
+                label="Rename"
+                disabled={Boolean(problem) || name === view.name || !nameFree}
+                disabledReason={problem ?? (name === view.name ? 'That is already its name.' : 'That name is taken. Try another.')}
+                send={() => writeContractAsync({ address: net.journey, abi: ryokoJourneyAbi, functionName: 'setName', args: [view.tokenId, name] })}
+                onConfirmed={refresh}
+              />
+            </div>
+            {problem && <p className="err">{problem}</p>}
           </div>
-        </li>
-      )}
-    </ol>
+
+          {!finished && agentOn && (
+            <div>
+              <h4>Do a step yourself</h4>
+              <p className="small tight">Only needed if the agent is ever offline.</p>
+              <div className="row wrap">
+                <TxButton
+                  variant="ghost"
+                  label="Eat an ant"
+                  disabled={!canTravel}
+                  disabledReason={`It can eat when it is between swamps, has an ant, and has time left for the longest stay (${formatSpan(maxStay(config.minStay))}).`}
+                  send={travel}
+                  onConfirmed={refresh}
+                />
+                <TxButton
+                  variant="ghost"
+                  label="Conquer"
+                  disabled={view.status !== Status.Ready}
+                  disabledReason="It can conquer once its rest is over."
+                  send={conquer}
+                  onConfirmed={refresh}
+                />
+              </div>
+            </div>
+          )}
+
+          <p className="small warn-text tight">Selling or moving this Chog starts its journey over from swamp 1 and clears its name.</p>
+        </div>
+      </details>
+    </div>
   );
 }

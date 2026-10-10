@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { erc20Abi, zeroAddress } from 'viem';
 import { useAccount, useReadContract } from 'wagmi';
-import { ryokoJourneyAbi, SWAMPS, glowLevel } from '@ryoko/shared';
+import { ryokoJourneyAbi, SWAMPS, glowLevel, Status } from '@ryoko/shared';
 import { useNetwork } from '../network';
 import { useAllJourneys, useChainNow, useJourneyConfig } from '../hooks';
 import { ChogPortrait } from '../components/ChogPortrait';
@@ -9,6 +9,7 @@ import { HolderPanel } from '../components/HolderPanel';
 import { ProgressPanel } from '../components/ProgressPanel';
 import { ConnectButton } from '../components/ConnectButton';
 import { ConquestBanner } from '../components/ConquestBanner';
+import { HowItWorks } from '../components/HowItWorks';
 import { LazyDiorama } from '../diorama/LazyDiorama';
 import { journeyToDiorama } from '../diorama/state';
 import { chogLabel, shortAddress } from '../format';
@@ -109,6 +110,7 @@ export function ChogPage({ id }: { id: bigint }) {
 
       <aside className="col-left" aria-label="Journey steps">
         {isHolder && <ConquestBanner view={view} name={name} events={events.data ?? []} />}
+        {isHolder && <HowItWorks config={config.data} open={view.status === Status.None} />}
         {isHolder ? (
           <HolderPanel view={view} config={config.data} now={now} />
         ) : (

@@ -3,7 +3,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { zeroAddress } from 'viem';
 import { glowLevel, STATUS_LABEL, testChogGenesisAbi } from '@ryoko/shared';
 import { useNetwork } from '../network';
-import { useAllJourneys } from '../hooks';
+import { useAllJourneys, useJourneyConfig } from '../hooks';
+import { HowItWorks } from '../components/HowItWorks';
 import { ChogPortrait } from '../components/ChogPortrait';
 import { ConnectButton } from '../components/ConnectButton';
 import { TxButton } from '../components/TxButton';
@@ -13,6 +14,7 @@ export function Mine() {
   const net = useNetwork();
   const { address } = useAccount();
   const journeys = useAllJourneys();
+  const config = useJourneyConfig();
   const queryClient = useQueryClient();
   const { writeContractAsync } = useWriteContract();
   const minted = useReadContract({
@@ -25,11 +27,14 @@ export function Mine() {
 
   if (!address) {
     return (
-      <section className="panel pad center">
-        <h1 className="display">Your Chogs</h1>
-        <p className="muted">Connect the wallet that holds your Chogs.</p>
-        <ConnectButton />
-      </section>
+      <div className="mine">
+        <section className="panel pad center">
+          <h1 className="display">Your Chogs</h1>
+          <p className="muted">Connect the wallet that holds your Chogs.</p>
+          <ConnectButton />
+        </section>
+        {config.data && <HowItWorks config={config.data} open />}
+      </div>
     );
   }
 
@@ -50,6 +55,8 @@ export function Mine() {
           />
         )}
       </div>
+
+      {config.data && <HowItWorks config={config.data} open={mine.every((j) => j.status === 0)} />}
 
       {journeys.isLoading ? (
         <p className="muted">Searching the swamps for your Chogs…</p>

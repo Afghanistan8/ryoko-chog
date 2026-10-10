@@ -120,7 +120,7 @@ export function Home() {
 
       {net.isTest && (
         <p className="testnet-banner">
-          Testnet demo: Chogs and CHOG here are free test tokens, and a day lasts{' '}
+          Testnet demo: Chogs and $CHOG here are free test tokens, and a day lasts{' '}
           {config.data ? formatSpan(config.data.legDuration / 9n) : 'about a minute'}.
         </p>
       )}
@@ -139,7 +139,7 @@ export function Home() {
           <b className="num">{journeys.data ? stats.ants : '–'}</b>
         </div>
         <div className="stat">
-          <span className="eyebrow">CHOG burned</span>
+          <span className="eyebrow">$CHOG burned</span>
           <b className="num">{journeys.data ? formatTokens(stats.burned) : '–'}</b>
         </div>
       </section>
@@ -177,7 +177,7 @@ export function Home() {
             </li>
             <li>
               <span>A</span>The Chog eats one ant to enter each swamp:{' '}
-              {config.data ? `${formatTokens(config.data.antPrice)} CHOG` : 'a set amount of CHOG'}, burned.
+              {config.data ? `${formatTokens(config.data.antPrice)} $CHOG` : 'a set amount of $CHOG'}, burned.
             </li>
             <li>
               <span>D</span>It stays {config.data ? formatSpan(config.data.minStay) : '2 days'} in each swamp and must

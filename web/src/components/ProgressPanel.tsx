@@ -79,7 +79,7 @@ export function ProgressPanel({ view, config, now, dstate, selected, notes, even
           </div>
           <p className="small muted tight">
             {antsInWallet > 9 ? `${antsInWallet} ants` : `${antsInWallet} ant${antsInWallet === 1 ? '' : 's'}`} in its wallet ·{' '}
-            {formatTokens(config.antPrice)} CHOG each
+            {formatTokens(config.antPrice)} $CHOG each
           </p>
         </div>
         <div>
@@ -129,7 +129,7 @@ export function ProgressPanel({ view, config, now, dstate, selected, notes, even
             <dd className="num">{view.ants}</dd>
           </div>
           <div>
-            <dt>CHOG burned</dt>
+            <dt>$CHOG burned</dt>
             <dd className="num">{formatTokens(view.burned)}</dd>
           </div>
           <div>

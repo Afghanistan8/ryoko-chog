@@ -44,7 +44,7 @@ export function App() {
       <footer className="foot small muted">
         <span>
           {net.chain.name}
-          {net.isTest ? ' · test Chogs and test CHOG' : ' · Chog Genesis and $CHOG'}
+          {net.isTest ? ' · test Chogs and test $CHOG' : ' · Chog Genesis and $CHOG'}
         </span>
         {explorer && (
           <a href={`${explorer}/address/${net.journey}`} target="_blank" rel="noreferrer">

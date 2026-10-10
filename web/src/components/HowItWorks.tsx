@@ -19,11 +19,11 @@ export function HowItWorks({ config, open }: { config: JourneyConfig; open: bool
       </summary>
       <ol className="how-steps">
         <li>
-          <b>Get CHOG.</b> Your Chog eats ants, and one ant is {ant} CHOG.{' '}
+          <b>Get $CHOG.</b> Your Chog eats ants, and one ant is {ant} $CHOG.{' '}
           {net.isTest ? (
-            <>On testnet it's free: press <i>Get 20,000 test CHOG</i>.</>
+            <>On testnet it's free: press <i>Get 20,000 test $CHOG</i>.</>
           ) : (
-            <>Have some $CHOG in your wallet first: {ant} for every swamp, so {formatTokens(config.antPrice * 9n)} for the whole trip.</>
+            <>Have some $CHOG in your wallet first: {ant} for every swamp, so {formatTokens(config.antPrice * 9n)} $CHOG for the whole trip.</>
           )}
         </li>
         <li>

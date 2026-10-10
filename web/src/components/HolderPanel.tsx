@@ -109,7 +109,7 @@ function SetOff({ view, config }: { view: JourneyView; config: JourneyConfig }) 
     let permit: { deadline: bigint; v: number; r: `0x${string}`; s: `0x${string}` } = NO_PERMIT;
     if (ants > 0 && allowance < cost) {
       if (canPermit) {
-        setStage('Step 1 of 2: sign to let Ryoko move the CHOG (free, no gas).');
+        setStage('Step 1 of 2: sign to let Ryoko move the $CHOG (free, no gas).');
         const deadline = BigInt(Math.floor(Date.now() / 1000) + 60 * 60);
         const sig = await signTypedDataAsync({
           domain: domain!,
@@ -128,7 +128,7 @@ function SetOff({ view, config }: { view: JourneyView; config: JourneyConfig }) 
         const p = parseSignature(sig);
         permit = { deadline, v: p.v !== undefined ? Number(p.v) : p.yParity + 27, r: p.r, s: p.s };
       } else {
-        setStage('Step 1 of 2: approve the CHOG for the journey.');
+        setStage('Step 1 of 2: approve the $CHOG for the journey.');
         const approval = await writeContractAsync({
           address: net.chogToken,
           abi: erc20Abi,
@@ -150,7 +150,7 @@ function SetOff({ view, config }: { view: JourneyView; config: JourneyConfig }) 
     });
   }
 
-  const blocked = problem ?? (nameTaken ? 'That name is taken. Try another.' : walletChog < cost ? `Your wallet needs ${formatTokens(cost)} CHOG for ${ants} ant${ants === 1 ? '' : 's'}.` : null);
+  const blocked = problem ?? (nameTaken ? 'That name is taken. Try another.' : walletChog < cost ? `Your wallet needs ${formatTokens(cost)} $CHOG for ${ants} ant${ants === 1 ? '' : 's'}.` : null);
 
   return (
     <div className="setoff">
@@ -173,7 +173,7 @@ function SetOff({ view, config }: { view: JourneyView; config: JourneyConfig }) 
 
       <div className="field">
         <label htmlFor="ant-count">
-          <b>2. Pack ants</b> <span className="small muted">one per swamp, {formatTokens(config.antPrice)} CHOG each</span>
+          <b>2. Pack ants</b> <span className="small muted">one per swamp, {formatTokens(config.antPrice)} $CHOG each</span>
         </label>
         <div className="row">
           <input
@@ -186,14 +186,14 @@ function SetOff({ view, config }: { view: JourneyView; config: JourneyConfig }) 
             className="num-input"
           />
           <span className="small">
-            = <b className="num">{formatTokens(cost)}</b> CHOG · you hold <b className="num">{formatTokens(walletChog)}</b>
+            = <b className="num">{formatTokens(cost)}</b> $CHOG · you hold <b className="num">{formatTokens(walletChog)}</b>
           </span>
         </div>
         <p className="small muted tight">9 covers every swamp. They go into your Chog's own wallet, and you can add more any time.</p>
         {net.isTest && (
           <TxButton
             variant="ghost"
-            label="Get 20,000 test CHOG"
+            label="Get 20,000 test $CHOG"
             send={() => writeContractAsync({ address: net.chogToken, abi: testChogTokenAbi, functionName: 'faucet' })}
             onConfirmed={refresh}
           />
@@ -226,7 +226,7 @@ function SetOff({ view, config }: { view: JourneyView; config: JourneyConfig }) 
       <p className="small muted tight">
         {stage ??
           (ants > 0 && allowance < cost
-            ? `Your wallet asks twice: ${canPermit ? 'a free signature for the CHOG' : 'an approval for the CHOG'}, then one transaction that names your Chog, creates its wallet, packs the ants${useAgent && net.agent ? ', appoints the agent' : ''} and sets off.`
+            ? `Your wallet asks twice: ${canPermit ? 'a free signature for the $CHOG' : 'an approval for the $CHOG'}, then one transaction that names your Chog, creates its wallet, packs the ants${useAgent && net.agent ? ', appoints the agent' : ''} and sets off.`
             : `One transaction names your Chog, creates its wallet${ants > 0 ? ', packs the ants' : ''}${useAgent && net.agent ? ', appoints the agent' : ''} and sets off.`)}
       </p>
     </div>
@@ -381,7 +381,7 @@ function Travelling({ view, config, now }: { view: JourneyView; config: JourneyC
           <p className="small tight">
             <b>Ants in its wallet: {antsInWallet.toString()}</b>
             {antsInWallet > 0n ? ` (enough for ${antsInWallet.toString()} more swamp${antsInWallet === 1n ? '' : 's'})` : ''}. You
-            hold {formatTokens(walletChog)} CHOG.
+            hold {formatTokens(walletChog)} $CHOG.
           </p>
           <div className="row">
             <input
@@ -397,7 +397,7 @@ function Travelling({ view, config, now }: { view: JourneyView; config: JourneyC
               variant="ghost"
               label={`Add ${ants} ant${ants === 1 ? '' : 's'}`}
               disabled={walletChog < feedAmount}
-              disabledReason={`That needs ${formatTokens(feedAmount)} CHOG in your wallet.${net.isTest ? ' Get free test CHOG first.' : ''}`}
+              disabledReason={`That needs ${formatTokens(feedAmount)} $CHOG in your wallet.${net.isTest ? ' Get free test $CHOG first.' : ''}`}
               send={() => writeContractAsync({ address: net.chogToken, abi: erc20Abi, functionName: 'transfer', args: [view.account, feedAmount] })}
               onConfirmed={refresh}
             />
@@ -405,7 +405,7 @@ function Travelling({ view, config, now }: { view: JourneyView; config: JourneyC
           {net.isTest && walletChog < feedAmount && (
             <TxButton
               variant="ghost"
-              label="Get 20,000 test CHOG"
+              label="Get 20,000 test $CHOG"
               send={() => writeContractAsync({ address: net.chogToken, abi: testChogTokenAbi, functionName: 'faucet' })}
               onConfirmed={refresh}
             />

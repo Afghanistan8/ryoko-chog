@@ -5,7 +5,7 @@ import { switchNetwork } from '../env';
 const LABEL: Record<NetworkName, string> = { mainnet: 'Mainnet', testnet: 'Testnet' };
 const HINT: Record<NetworkName, string> = {
   mainnet: 'Real Chog Genesis and $CHOG. A day is a day.',
-  testnet: 'Free test Chogs and test CHOG. A day lasts a minute.',
+  testnet: 'Free test Chogs and test $CHOG. A day lasts a minute.',
 };
 
 /** Mainnet / Testnet toggle. Switching reloads the page on the other network. */

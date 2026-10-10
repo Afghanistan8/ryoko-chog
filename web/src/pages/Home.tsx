@@ -80,7 +80,7 @@ export function Home() {
             <span>Chog</span>
           </h1>
           <p className="hero-sub">
-            Your Chog gets its own wallet and an agent. Feed it ants made of $CHOG, and it walks nine swamps on Monad,
+            Your Chog gets its own agent. Feed it ants made of $CHOG, and it walks nine swamps on Monad,
             writing a note each time it conquers one. The further it goes, the brighter it glows.
           </p>
           <div className="hero-ctas">
@@ -180,8 +180,9 @@ export function Home() {
               {config.data ? `${formatTokens(config.data.antPrice)} $CHOG` : 'a set amount of $CHOG'}, burned.
             </li>
             <li>
-              <span>D</span>It stays {config.data ? formatSpan(config.data.minStay) : '2 days'} in each swamp and must
-              conquer within {config.data ? formatSpan(config.data.legDuration) : '9 days'} of setting out.
+              <span>D</span>It rests about {config.data ? formatSpan(config.data.minStay) : '2 days'} in each swamp (events
+              make that a little shorter or longer) and must finish each swamp within{' '}
+              {config.data ? formatSpan(config.data.legDuration) : '9 days'}.
             </li>
             <li>
               <span>E</span>Every swamp rolls an event: a shortcut, fog, an ant nest that spares the ant, or a relic.

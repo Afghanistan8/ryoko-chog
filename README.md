@@ -1,14 +1,32 @@
 # Ryoko Chog
 
-Every Chog gets its own wallet and its own agent, then travels through nine swamps on Monad.
+Every Chog gets its own agent, then travels through nine swamps on Monad.
 
-To enter each swamp the Chog eats an ant: a fixed amount of $CHOG paid from the Chog's own wallet and burned. Every swamp rolls an event (a shortcut, fog, an ant nest or a relic), and rarer Chogs, by their official Tier, get luckier rolls. The Chog stays about two days, or rushes by eating two extra ants, then conquers the swamp and writes a short field note on-chain. Each swamp has a nine-day deadline. The further a Chog gets, the brighter it glows, and it turns gold at swamp nine. Every conquest can be posted to X with a card made for that Chog. Selling or moving the Chog resets its journey.
+To enter each swamp the Chog eats an ant: a fixed amount of $CHOG taken from the Chog's ant pouch and burned. Every swamp rolls an event (a shortcut, fog, an ant nest or a relic), and rarer Chogs, by their official Tier, get luckier rolls. The Chog stays about two days, or rushes by eating two extra ants, then conquers the swamp and writes a short field note on-chain. Each swamp has a nine-day deadline. The further a Chog gets, the brighter it glows, and it turns gold at swamp nine. Every conquest can be posted to X with a card made for that Chog. Selling or moving the Chog resets its journey.
 
 Built for Chogathon 2026.
 
+**Play it:** [ryoko-chog.vercel.app](https://ryoko-chog.vercel.app). Use the **Testnet** switch in the header to try it free.
+
+## How to play
+
+1. **Get $CHOG.** Your Chog eats ants, and one ant is 1,000 $CHOG. On testnet it's free: open your Chog and press **Get 20,000 test $CHOG**. On mainnet, have $CHOG in your wallet first: 9,000 covers the whole trip.
+2. **Set off once.** Open your Chog (under **My Chogs**), give it a name, choose how many ants to pack (9 covers every swamp), keep **Let the agent walk it for me** ticked, and press **Set off**. Your wallet asks for one free signature and one transaction. That's all you have to do.
+3. **The agent walks it for you.** It feeds your Chog one ant to enter a swamp. The Chog rests there for 2 days (2 minutes on testnet), then the agent conquers the swamp and writes a short note, and they move on to the next one. You never have to press "conquer" yourself.
+4. **Keep it fed.** Nine swamps need at least nine ants. If its pouch runs empty, it waits, hungry, until you press **Add ants**.
+
+**Good to know**
+
+- Each swamp rolls an event: a shortcut, fog, a free ant (ant nest) or a relic. Rarer Chogs, by their official Tier, get luckier rolls.
+- In a hurry? **Rush** eats 2 extra ants to finish a stay one day sooner (one minute on testnet).
+- Each swamp must be done within 9 days (9 minutes on testnet). If that runs out, that swamp starts over; earlier swamps stay done.
+- Every conquest can be posted to X with one click, with an image made for your Chog.
+- Selling or moving your Chog starts its journey over from swamp 1.
+- The Chog page always says, in one box, what is happening now and whether you need to do anything.
+
 ## Why the Chog NFT is essential
 
-- The Chog **is** the wallet. Each Chog has an ERC-6551 token-bound account, and the ants are paid from that account. Without the NFT there is no wallet, no agent and no journey.
+- The Chog holds its own ants. Its ant pouch is an ERC-6551 token-bound account that belongs to the NFT itself, and every ant is paid from it. Without the NFT there is no pouch, no agent and no journey.
 - Progress belongs to the Chog and its holder. A new holder starts from swamp one, and the glow, notes and name reset.
 - The Chog's own rarity matters: its official Tier from the Chog Genesis metadata is stored on-chain and tilts every swamp event.
 - The site shows the holder's real Chog art with its current glow, and every share card is made for that Chog.
@@ -103,6 +121,7 @@ Checked against live Monad RPCs during development:
 
 - **The agent can only call the journey contract.** `RyokoAccount.execute` lets the appointed agent call `journey` with zero value and nothing else, so it cannot move the Chog's tokens or NFTs. Its appointment stops working the moment the Chog changes hands.
 - **The journey contract never holds funds.** It pulls exactly one ant per `travel` (two per `rush`) from the Chog's account and sends it to the burn address. In `begin` it moves the holder's $CHOG straight into the Chog's account, using exactly the permit the holder signed.
+- **The agent never rushes.** Rushing burns two of the holder's ants, so it is only ever done by the holder. The Ryoko agent only feeds one ant per swamp and conquers.
 - **Only `begin` can set up an account for the holder.** `RyokoAccount.setupFromJourney` only accepts calls from the journey contract, and only for the Chog's current holder, which `begin` checks is the caller.
 - **The admin** (owner of `RyokoJourney`) can change `antPrice`, set the resetter and load tiers until they are frozen. Ownership transfer is two-step. The admin cannot move anyone's tokens or edit journeys.
 - **The resetter** (normally the agent) can reset a journey with `reportTransfer`. That covers a Chog sent away and back to the same wallet between checks, which the contract cannot detect on its own. A resetter can only reset, never move funds. Set it to the zero address to disable it.
@@ -224,7 +243,7 @@ On testnet a "day" lasts one minute, so a whole journey takes about 20 minutes.
 
 1. Open the site, switch the header to **Testnet**, and connect a wallet. Get test MON from a Monad testnet faucet for gas.
 2. Go to **My Chogs** and press **Mint a free test Chog** (up to 3 per wallet).
-3. Open the Chog and press **Get 20,000 test CHOG**.
-4. Type a name, choose how many ants to pack, keep **Let the Ryoko agent walk it for me** ticked, and press **Set off**. Your wallet asks for one free signature and one transaction.
+3. Open the Chog and press **Get 20,000 test $CHOG**.
+4. Type a name, keep 9 ants (enough for every swamp), keep **Let the agent walk it for me** ticked, and press **Set off**. Your wallet asks for one free signature and one transaction.
 5. Within a round the agent makes the Chog eat an ant and enter swamp 1. Its event (shortcut, fog, ant nest or relic) shows on the page. Press **Rush** to spend two ants and cut a minute off the stay.
-6. When it conquers, a **New conquest** card appears with the post written and the share image. Watch the glow grow, the notes fill in and the leaderboard update. **Or travel by hand** does every step from your own wallet.
+6. When it conquers, a **New conquest** card appears with the post written and the share image. Watch the glow grow, the notes fill in and the leaderboard update. **More options → Do a step yourself** does every step from your own wallet.

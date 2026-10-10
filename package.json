@@ -1,7 +1,7 @@
 {
   "name": "ryoko-chog",
   "private": true,
-  "description": "Ryoko Chog: each Chog NFT gets its own wallet and agent and travels through nine swamps on Monad.",
+  "description": "Ryoko Chog: each Chog NFT gets its own agent and travels through nine swamps on Monad, eating $CHOG ants.",
   "workspaces": [
     "packages/shared",
     "agent",

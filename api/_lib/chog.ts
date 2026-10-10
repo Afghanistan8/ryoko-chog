@@ -82,6 +82,6 @@ export function describe(data: ShareData): { title: string; text: string } {
     : `${data.name} is on its way to ${data.swampName}`;
   const text = data.complete
     ? `All nine swamps conquered on Ryoko Chog. ${data.name} glows gold.`
-    : `Swamp ${data.swamp} of 9 on Ryoko Chog, where every Chog travels with its own wallet and burns $CHOG ants.`;
+    : `Swamp ${data.swamp} of 9 on Ryoko Chog, where every Chog travels with its own agent and burns $CHOG ants.`;
   return { title, text };
 }

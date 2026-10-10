@@ -189,7 +189,7 @@ function SetOff({ view, config }: { view: JourneyView; config: JourneyConfig }) 
             = <b className="num">{formatTokens(cost)}</b> $CHOG · you hold <b className="num">{formatTokens(walletChog)}</b>
           </span>
         </div>
-        <p className="small muted tight">9 covers every swamp. They go into your Chog's own wallet, and you can add more any time.</p>
+        <p className="small muted tight">9 covers every swamp. They go into your Chog's ant pouch, and you can add more any time.</p>
         {net.isTest && (
           <TxButton
             variant="ghost"
@@ -226,8 +226,8 @@ function SetOff({ view, config }: { view: JourneyView; config: JourneyConfig }) 
       <p className="small muted tight">
         {stage ??
           (ants > 0 && allowance < cost
-            ? `Your wallet asks twice: ${canPermit ? 'a free signature for the $CHOG' : 'an approval for the $CHOG'}, then one transaction that names your Chog, creates its wallet, packs the ants${useAgent && net.agent ? ', appoints the agent' : ''} and sets off.`
-            : `One transaction names your Chog, creates its wallet${ants > 0 ? ', packs the ants' : ''}${useAgent && net.agent ? ', appoints the agent' : ''} and sets off.`)}
+            ? `Your wallet asks twice: ${canPermit ? 'a free signature for the $CHOG' : 'an approval for the $CHOG'}, then one transaction that names your Chog, makes its ant pouch, packs the ants${useAgent && net.agent ? ', appoints the agent' : ''} and sets off.`
+            : `One transaction names your Chog, makes its ant pouch${ants > 0 ? ', packs the ants' : ''}${useAgent && net.agent ? ', appoints the agent' : ''} and sets off.`)}
       </p>
     </div>
   );
@@ -332,7 +332,7 @@ function Travelling({ view, config, now }: { view: JourneyView; config: JourneyC
               variant="ghost"
               label={`Rush for ${RUSH_ANTS} ants`}
               disabled={accountChog < rushPrice || allowance < rushPrice}
-              disabledReason={`Rushing needs ${RUSH_ANTS} ants in its wallet. Add ants below first.`}
+              disabledReason={`Rushing needs ${RUSH_ANTS} ants in its pouch. Add ants below first.`}
               send={() => execute(encodeFunctionData({ abi: ryokoJourneyAbi, functionName: 'rush' }))}
               onConfirmed={refresh}
             />
@@ -379,7 +379,7 @@ function Travelling({ view, config, now }: { view: JourneyView; config: JourneyC
       {!finished && (
         <div className="ants-box">
           <p className="small tight">
-            <b>Ants in its wallet: {antsInWallet.toString()}</b>
+            <b>Ants in its pouch: {antsInWallet.toString()}</b>
             {antsInWallet > 0n ? ` (enough for ${antsInWallet.toString()} more swamp${antsInWallet === 1n ? '' : 's'})` : ''}. You
             hold {formatTokens(walletChog)} $CHOG.
           </p>

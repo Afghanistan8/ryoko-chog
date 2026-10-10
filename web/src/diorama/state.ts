@@ -17,7 +17,7 @@ export interface DioramaState {
   started: boolean;
   /** Ants eaten this journey; an increase plays the eat-and-travel moment. */
   ants: number;
-  /** Show ants marching toward the Chog (between swamps, with food in its wallet). */
+  /** Show ants marching toward the Chog (between swamps, with ants in its pouch). */
   antsComing: boolean;
   name: string;
   subtitle: string;

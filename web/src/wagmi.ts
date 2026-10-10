@@ -17,7 +17,7 @@ export function makeWagmiConfig(network: NetworkConfig, walletConnectProjectId?:
         showQrModal: true,
         metadata: {
           name: 'Ryoko Chog',
-          description: 'Every Chog gets its own wallet and agent and travels nine swamps on Monad.',
+          description: 'Every Chog gets its own agent and travels nine swamps on Monad, eating $CHOG ants.',
           url: window.location.origin,
           icons: [`${window.location.origin}/favicon.svg`],
         },

@@ -67,10 +67,16 @@ export function ProgressPanel({ view, config, now, dstate, selected, notes, even
         <h2 id="now-h" className="display">
           {STATUS_LABEL[view.status as keyof typeof STATUS_LABEL]}
         </h2>
-        <NowDetail view={view} config={config} now={now} antsInWallet={antsInWallet} />
+        <NowDetail
+          view={view}
+          config={config}
+          now={now}
+          antsInWallet={antsInWallet}
+          agentOn={net.agent !== undefined && view.agent.toLowerCase() === net.agent.toLowerCase()}
+        />
         <div>
           <div className="eyebrow">Ant pouch</div>
-          <div className="pouch" aria-label={`${antsInWallet} ants in the Chog's wallet`}>
+          <div className="pouch" aria-label={`${antsInWallet} ants in the Chog's pouch`}>
             {Array.from({ length: 9 }, (_, k) => (
               <span key={k} className={k < antsInWallet ? '' : 'empty'}>
                 {ANT}
@@ -78,7 +84,7 @@ export function ProgressPanel({ view, config, now, dstate, selected, notes, even
             ))}
           </div>
           <p className="small muted tight">
-            {antsInWallet > 9 ? `${antsInWallet} ants` : `${antsInWallet} ant${antsInWallet === 1 ? '' : 's'}`} in its wallet ·{' '}
+            {antsInWallet > 9 ? `${antsInWallet} ants` : `${antsInWallet} ant${antsInWallet === 1 ? '' : 's'}`} in its pouch ·{' '}
             {formatTokens(config.antPrice)} $CHOG each
           </p>
         </div>
@@ -181,7 +187,20 @@ function EventChip({ event, rushed }: { event: SwampEventValue; rushed?: boolean
   );
 }
 
-function NowDetail({ view, config, now, antsInWallet }: { view: JourneyView; config: JourneyConfig; now: bigint | undefined; antsInWallet: number }) {
+function NowDetail({
+  view,
+  config,
+  now,
+  antsInWallet,
+  agentOn,
+}: {
+  view: JourneyView;
+  config: JourneyConfig;
+  now: bigint | undefined;
+  antsInWallet: number;
+  /** Whether this Chog's agent is the site's agent, so the text never promises moves nobody will make. */
+  agentOn: boolean;
+}) {
   if (now === undefined) return null;
   const left = (t: bigint) => (t > now ? t - now : 0n);
   const bar = (done: bigint, total: bigint) => {
@@ -206,10 +225,12 @@ function NowDetail({ view, config, now, antsInWallet }: { view: JourneyView; con
           {bar(now - view.legStartedAt, config.legDuration)}
           <p className="small muted tight">
             {antsInWallet === 0
-              ? 'Hungry: feed it an ant so it can enter the next swamp.'
-              : fits
-                ? 'The agent makes it eat an ant on its next round.'
-                : 'Too late to enter this leg. The swamp restarts once the deadline passes.'}
+              ? 'Hungry: it needs an ant in its pouch to enter the next swamp.'
+              : !fits
+                ? "Too late to fit a stay in before this swamp's deadline. The swamp starts over once it passes."
+                : agentOn
+                  ? 'The agent feeds it an ant and walks it in within a minute.'
+                  : 'Its holder can feed it an ant to walk in.'}
           </p>
         </>
       );
@@ -228,7 +249,11 @@ function NowDetail({ view, config, now, antsInWallet }: { view: JourneyView; con
               {EVENT_INFO[view.swampEvent as SwampEventValue].line} {EVENT_INFO[view.swampEvent as SwampEventValue].effect}
             </p>
           )}
-          <p className="small muted tight">Then the agent writes a field note and the Chog moves on.</p>
+          <p className="small muted tight">
+            {agentOn
+              ? 'Then the agent conquers the swamp, writes a field note and the Chog moves on.'
+              : 'Then its holder can conquer the swamp and move on.'}
+          </p>
         </>
       );
     case Status.Ready:
@@ -238,11 +263,13 @@ function NowDetail({ view, config, now, antsInWallet }: { view: JourneyView; con
             <span>Must conquer within</span>
             <b className="num">{formatDuration(left(view.deadline))}</b>
           </div>
-          <p className="small muted tight">Ready. The agent conquers it on its next round.</p>
+          <p className="small muted tight">
+            {agentOn ? 'Its rest is over. The agent conquers it within a minute.' : 'Its rest is over. Its holder can conquer it now.'}
+          </p>
         </>
       );
     case Status.Expired:
-      return <p className="warn-text small">Missed the deadline. The next ant restarts this swamp; earlier swamps stay conquered.</p>;
+      return <p className="warn-text small">Time ran out on this swamp, so it starts over with the next ant. Earlier swamps stay conquered.</p>;
     case Status.Complete:
       return <p className="small tight gold-text">All nine swamps conquered. This Chog glows gold.</p>;
     default:

@@ -981,10 +981,29 @@ input[type='text'] {
 /* The journey: what happens now, ants, more options */
 .journey-now {
   display: grid;
+  /* minmax(0, 1fr): boxes shrink to the column instead of growing to fit their longest line. */
+  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
+  min-width: 0;
+}
+.journey-now .row {
+  flex-wrap: wrap;
+}
+.journey-now .row > * {
+  min-width: 0;
+}
+.journey-now input[type='text'] {
+  flex: 1 1 140px;
+  width: 100%;
+}
+.journey-now .btn {
+  max-width: 100%;
+  white-space: normal;
+  text-align: center;
 }
 .now-box {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 8px;
   padding: 14px;
   border: 2px solid var(--ink);
@@ -999,12 +1018,14 @@ input[type='text'] {
 }
 .rush {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 6px;
   padding-top: 8px;
   border-top: 2px dashed rgba(22, 22, 22, 0.2);
 }
 .ants-box {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 8px;
   padding: 14px;
   border: 2px solid var(--soft);
@@ -1018,6 +1039,7 @@ input[type='text'] {
 }
 .more-body {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 14px;
   padding-top: 6px;
 }
@@ -1173,8 +1195,6 @@ input[type='text'] {
   min-width: 0;
   display: grid;
   gap: 14px;
-  position: sticky;
-  top: calc(env(safe-area-inset-top, 0px) + 12px);
 }
 .col-right {
   grid-area: right;

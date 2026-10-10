@@ -1002,7 +1002,8 @@ export class Diorama {
     const s = this.state;
 
     this.target.lerp(this.focus, 1 - Math.pow(0.02, dt));
-    const th = this.theta + Math.sin(T * 0.08) * 0.06 * amb;
+    // No idle drift: the camera stays put unless someone taps a swamp or looks around in full screen.
+    const th = this.theta;
     const { target: tg, radius: r, phi } = this;
     this.camera.position.set(tg.x + r * Math.sin(phi) * Math.sin(th), tg.y + r * Math.cos(phi), tg.z + r * Math.sin(phi) * Math.cos(th));
     this.camera.lookAt(tg);
